@@ -384,52 +384,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    // it('14. setDefaultQuery', async (): Promise<void> => {
-    //     const test2: string = 'test2';
-    //     const test: string = `${test2}Test`;
-    //     const testB: string = `${test2}TestB`;
-
-    //     const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
-
-    //     testService2.setDependent(true);
-
-    //     testService2.setDefaultQuery(test2, qb);
-    //     testService2.setJoins(test2, qb, {});
-
-    //     expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-    //         SELECT 
-    //         '${test2}'.'id'           AS 'test2_id', 
-    //         '${test2}'.'deleted_at'   AS 'test2_deleted_at', 
-    //         '${test2}'.'test'         AS 'test2_test', 
-    //         '${test2}'.'testB'        AS 'test2_testB', 
-
-    //         '${test}'.'id'         AS '${test}_id', 
-    //         '${test}'.'name'       AS '${test}_name', 
-    //         '${test}'.'created_at' AS '${test}_created_at', 
-    //         '${test}'.'updated_at' AS '${test}_updated_at', 
-    //         '${test}'.'deleted_at' AS '${test}_deleted_at', 
-
-    //         '${testB}'.'id'         AS '${testB}_id', 
-    //         '${testB}'.'name'       AS '${testB}_name', 
-    //         '${testB}'.'created_at' AS '${testB}_created_at', 
-    //         '${testB}'.'updated_at' AS '${testB}_updated_at', 
-    //         '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
-
-    //         FROM 'Test2' '${test2}'
-    //         INNER JOIN 'Test' '${test}' ON '${test}'.'id'='${test2}'.'test' 
-    //             AND ( '${test}'.'deleted_at' IS NULL )
-    //         INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB' 
-    //             AND ( '${testB}'.'deleted_at' IS NULL )
-
-    //         WHERE '${test}'.'deleted_at' IS NULL
-    //             AND '${test2}'.'id' > 0
-    //     `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
-    //     expect(await qb.getCount()).to.be.eq(1);
-
-    //     testService2.setDependent(false);
-    // });
-
-    it('15. getSorting', async (): Promise<void> => {
+    it('14. getSorting', async (): Promise<void> => {
         expect(testService.getSorting('test', {
             sort: {
                 'test.name': 'ASC'
@@ -439,13 +394,13 @@ describe('DefaultService', (): void => {
         });
     });
 
-    it('16. getSorting', async (): Promise<void> => {
+    it('15. getSorting', async (): Promise<void> => {
         expect(testService.getSorting('test', {})).to.be.deep.eq({
             'test.name': 'ASC'
         });
     });
 
-    it('17. getSorting', async (): Promise<void> => {
+    it('16. getSorting', async (): Promise<void> => {
         testService2.setDefaultSorting({
             name: 'ASC'
         });
@@ -464,14 +419,14 @@ describe('DefaultService', (): void => {
         testService2.setDefaultSorting({});
     });
 
-    it('18. getSorting', async (): Promise<void> => {
+    it('17. getSorting', async (): Promise<void> => {
         expect(testService2.getSorting('test2', {})).to.be.deep.eq({
             'test2Test.name': 'ASC',
             'test2TestB.name': 'ASC'
         });
     });
 
-    it('19. getSorting', async (): Promise<void> => {
+    it('18. getSorting', async (): Promise<void> => {
         expect(testService2.getSorting('test2', {
             ignore: ['test2Test']
         })).to.be.deep.eq({
@@ -479,7 +434,7 @@ describe('DefaultService', (): void => {
         });
     });
 
-    it('20. getSorting', async (): Promise<void> => {
+    it('19. getSorting', async (): Promise<void> => {
         testService2.setDefaultSorting({
             '$alias.title': 'ASC'
         });
@@ -495,7 +450,7 @@ describe('DefaultService', (): void => {
         testService2.setDefaultSorting({});
     });
 
-    it('21. getSorting', async (): Promise<void> => {
+    it('20. getSorting', async (): Promise<void> => {
         testService2.setDefaultSorting({
             '$alias.title': 'ASC'
         });
@@ -512,7 +467,7 @@ describe('DefaultService', (): void => {
         testService2.setDefaultSorting({});
     });
 
-    it('22. setJoins', async (): Promise<void> => {
+    it('21. setJoins', async (): Promise<void> => {
         const test: string = 'test';
         const test2: string = `${test}Test2`;
         const testB: string = `${test2}TestB`;
@@ -552,7 +507,7 @@ describe('DefaultService', (): void => {
 
     });
 
-    it('23. setJoins', async (): Promise<void> => {
+    it('22. setJoins', async (): Promise<void> => {
         const test: string = 'test';
         const test2: string = `${test}Test2`;
         const testB: string = `${test2}TestB`;
@@ -590,7 +545,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('24. setJoins', async (): Promise<void> => {
+    it('23. setJoins', async (): Promise<void> => {
         const test: string = 'test';
         const test2: string = `${test}Test2`;
         const testB: string = `${test2}TestB`;
@@ -631,7 +586,7 @@ describe('DefaultService', (): void => {
         testService.deleteChildJoinType();
     });
 
-    it('25. setJoins', async (): Promise<void> => {
+    it('24. setJoins', async (): Promise<void> => {
         const test: string = 'test';
         const test2: string = `${test}Test2`;
         const testB: string = `${test2}TestB`;
@@ -674,7 +629,7 @@ describe('DefaultService', (): void => {
         testService2.setDeletedAtField(undefined);
     });
 
-    it('26. setJoins', async (): Promise<void> => {
+    it('25. setJoins', async (): Promise<void> => {
         const test: string = 'test';
         const test2: string = `${test}Test2`;
         const testB: string = `${test2}TestB`;
@@ -717,7 +672,7 @@ describe('DefaultService', (): void => {
         testService.deleteAndWhere();
     });
 
-    it('27. setJoins', async (): Promise<void> => {
+    it('26. setJoins', async (): Promise<void> => {
         const test: string = 'test';
         const test2: string = `${test}Test2`;
         const testB: string = `${test2}TestB`;
@@ -763,7 +718,7 @@ describe('DefaultService', (): void => {
         testService2.setDeletedAtField(undefined);
     });
 
-    it('28. setJoins', async (): Promise<void> => {
+    it('27. setJoins', async (): Promise<void> => {
         const test: string = 'test';
         const test2: string = `${test}Test2`;
         const testB: string = `${test2}TestB`;
@@ -809,7 +764,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('29. setJoins', async (): Promise<void> => {
+    it('28. setJoins', async (): Promise<void> => {
         const test: string = 'test';
         const test2: string = `${test}Test2`;
         const testB: string = `${test2}TestB`;
@@ -855,7 +810,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('30. setJoins', async (): Promise<void> => {
+    it('29. setJoins', async (): Promise<void> => {
         const test: string = 'test';
         const test2: string = `${test}Test2`;
         const testB: string = `${test2}TestB`;
@@ -905,7 +860,7 @@ describe('DefaultService', (): void => {
         testService2.setDeletedAtField(undefined);
     });
 
-    it('31. setJoins', async (): Promise<void> => {
+    it('30. setJoins', async (): Promise<void> => {
         const test: string = 'test';
         const test2: string = `${test}Test2`;
         const testB: string = `${test2}TestB`;
@@ -947,7 +902,7 @@ describe('DefaultService', (): void => {
         testService2.setDeletedAtField(undefined);
     });
 
-    it('32. setJoins', async (): Promise<void> => {
+    it('31. setJoins', async (): Promise<void> => {
         const test: string = 'test';
 
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
@@ -969,7 +924,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('33. setJoins', async (): Promise<void> => {
+    it('32. setJoins', async (): Promise<void> => {
         const test: string = 'test';
 
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
@@ -991,7 +946,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('34. setJoins', async (): Promise<void> => {
+    it('33. setJoins', async (): Promise<void> => {
         const test2: string = 'test2';
         const test: string = `${test2}Test`;
         const testB: string = `${test2}TestB`;
@@ -1026,7 +981,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('35. setJoins', async (): Promise<void> => {
+    it('34. setJoins', async (): Promise<void> => {
         const test2: string = 'test2';
         const test: string = `${test2}Test`;
         const testB: string = `${test2}TestB`;
@@ -1067,7 +1022,7 @@ describe('DefaultService', (): void => {
         testService2.deleteParentJoinType();
     });
 
-    it('36. setJoins', async (): Promise<void> => {
+    it('35. setJoins', async (): Promise<void> => {
         const test2: string = 'test2';
         const test: string = `${test2}Test`;
         const testB: string = `${test2}TestB`;
@@ -1106,7 +1061,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('37. setJoins', async (): Promise<void> => {
+    it('36. setJoins', async (): Promise<void> => {
         const test2: string = 'test2';
         const test: string = `${test2}Test`;
         const testB: string = `${test2}TestB`;
@@ -1143,7 +1098,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('38. setJoins', async (): Promise<void> => {
+    it('37. setJoins', async (): Promise<void> => {
         const test2: string = 'test2';
 
         const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
@@ -1164,7 +1119,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('39. setJoins', async (): Promise<void> => {
+    it('38. setJoins', async (): Promise<void> => {
         const test2: string = 'test2';
         const test: string = `${test2}Test`;
         const testB: string = `${test2}TestB`;
@@ -1243,7 +1198,7 @@ describe('DefaultService', (): void => {
         testService2.setDependent(false);
     });
 
-    it('39. setJoins', async (): Promise<void> => {
+    it('40. setJoins', async (): Promise<void> => {
         const test2: string = 'test2';
         const test: string = `${test2}Test`;
         const testB: string = `${test2}TestB`;
@@ -1287,7 +1242,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('39. setJoins', async (): Promise<void> => {
+    it('41. setJoins', async (): Promise<void> => {
         const test: string = 'test';
         const test2: string = `${test}Test2`;
         const testB: string = `${test2}TestB`;
@@ -1338,7 +1293,7 @@ describe('DefaultService', (): void => {
         testService.setDependent(false);
     });
 
-    it('39. setJoins', async (): Promise<void> => {
+    it('42. setJoins', async (): Promise<void> => {
         const test2: string = 'test2';
         const test: string = `${test2}Test`;
         const testB: string = `${test2}TestB`;
@@ -1381,7 +1336,7 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('40. setPagination', async (): Promise<void> => {
+    it('43. setPagination', async (): Promise<void> => {
         const test: string = 'test';
 
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
@@ -1400,7 +1355,7 @@ describe('DefaultService', (): void => {
         expect((await qb.getMany()).length).to.be.eq(1);
     });
 
-    it('41. setPagination', async (): Promise<void> => {
+    it('44. setPagination', async (): Promise<void> => {
         const test: string = 'test';
 
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
@@ -1426,7 +1381,7 @@ describe('DefaultService', (): void => {
         expect((await qb.getMany()).length).to.be.eq(0);
     });
 
-    it('42. list', async (): Promise<void> => {
+    it('45. list', async (): Promise<void> => {
         const test: string = 'test';
 
         let sql: string;
@@ -1455,7 +1410,7 @@ describe('DefaultService', (): void => {
         expect(items.length).to.be.eq(1);
     });
 
-    it('43. count', async (): Promise<void> => {
+    it('46. count', async (): Promise<void> => {
         const test: string = 'test';
 
         let sql: string;
@@ -1484,7 +1439,7 @@ describe('DefaultService', (): void => {
         expect(total).to.be.eq(1);
     });
 
-    it('44. listAndCount', async (): Promise<void> => {
+    it('47. listAndCount', async (): Promise<void> => {
         const test: string = 'test';
 
         let sql: string;
@@ -1514,7 +1469,7 @@ describe('DefaultService', (): void => {
         expect(total).to.be.eq(1);
     });
 
-    it('45. listBy', async (): Promise<void> => {
+    it('48. listBy', async (): Promise<void> => {
         const test: string = 'test';
 
         let sql: string;
@@ -1539,7 +1494,7 @@ describe('DefaultService', (): void => {
         expect(items.length).to.be.eq(1);
     });
 
-    it('46. findById', async (): Promise<void> => {
+    it('49. findById', async (): Promise<void> => {
         const test: string = 'test';
 
         let sql: string;
@@ -1563,7 +1518,7 @@ describe('DefaultService', (): void => {
         expect(item).to.exist;
     });
 
-    it('47. findBy', async (): Promise<void> => {
+    it('50. findBy', async (): Promise<void> => {
         const test: string = 'test';
 
         let sql: string;
@@ -1587,7 +1542,7 @@ describe('DefaultService', (): void => {
         expect(item).to.exist;
     });
 
-    it('48. find', async (): Promise<void> => {
+    it('51. find', async (): Promise<void> => {
         const test: string = 'test';
 
         let sql: string;
@@ -1615,7 +1570,7 @@ describe('DefaultService', (): void => {
         expect(item).to.exist;
     });
 
-    it('49. save', async (): Promise<void> => {
+    it('52. save', async (): Promise<void> => {
         let item: Test = new Test();
         item.name = 'test';
 
@@ -1628,11 +1583,11 @@ describe('DefaultService', (): void => {
         expect(await testService.findById('test', item.id, {})).to.exist;
     });
 
-    it('50. save', async (): Promise<void> => {
+    it('53. save', async (): Promise<void> => {
         expect(await testService.save(undefined)).to.be.undefined;
     });
 
-    it('51. save', async (): Promise<void> => {
+    it('54. save', async (): Promise<void> => {
         let item: Test = new Test();
         item.name = 'test';
 
@@ -1646,7 +1601,7 @@ describe('DefaultService', (): void => {
         expect(item.updatedAt).to.exist;
     });
 
-    it('52. save', async (): Promise<void> => {
+    it('55. save', async (): Promise<void> => {
         let id: number;
         let err: Error;
         try {
@@ -1669,7 +1624,7 @@ describe('DefaultService', (): void => {
         expect(await testService.findById('test', id, {})).to.not.exist;
     });
 
-    it('53. remove', async (): Promise<void> => {
+    it('56. remove', async (): Promise<void> => {
         let item: Test = new Test();
         item.name = 'test';
 
@@ -1682,7 +1637,7 @@ describe('DefaultService', (): void => {
         expect(await testService.findById('test', item.id, {})).to.not.exist;
     });
 
-    it('54. remove', async (): Promise<void> => {
+    it('57. remove', async (): Promise<void> => {
         let item: Test = new Test();
         item.name = 'test';
 
