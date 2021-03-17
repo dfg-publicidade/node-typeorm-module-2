@@ -3,7 +3,7 @@ import Paginate from '@dfgpublicidade/node-pagination-module';
 import { expect } from 'chai';
 import { after, before, describe, it } from 'mocha';
 import { Column, Connection, Entity, EntityManager, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, SelectQueryBuilder } from 'typeorm';
-import { DefaultService, JoinType, TypeOrmManager } from '../../src';
+import { DefaultService, JoinType, ServiceOptions, TypeOrmManager } from '../../src';
 
 /* Tests */
 @Entity({
@@ -121,6 +121,22 @@ class TestService extends DefaultService<Test> {
     public deleteAndWhere(): void {
         delete this.childEntities[0].andWhere;
     }
+
+    public setDeletedField(deletedAtField: string): void {
+        this.deletedAtField = deletedAtField;
+    }
+
+    public setDependent(dependent: boolean): void {
+        this.childEntities[0].dependent = dependent;
+    }
+
+    public setDefaultQuery(alias: string, qb: SelectQueryBuilder<any>, serviceOptions: ServiceOptions<any>, options?: any): void {
+        super.setDefaultQuery(alias, qb, serviceOptions, options);
+
+        if (serviceOptions?.sort) {
+            qb.addOrderBy('test.id', 'ASC');
+        }
+    }
 }
 
 class TestService2 extends DefaultService<Test2> {
@@ -155,11 +171,7 @@ class TestService2 extends DefaultService<Test2> {
         return instance;
     }
 
-    public setDependent(dependant: boolean): void {
-        this.parentEntities[0].dependent = dependant;
-    }
-
-    public setDefaultQuery(alias: string, qb: any): void {
+    public setDefaultQuery(alias: string, qb: SelectQueryBuilder<any>): void {
         super.setDefaultQuery(alias, qb, {});
 
         qb.andWhere(`${alias}.id > 0`);
@@ -189,6 +201,10 @@ class TestService2 extends DefaultService<Test2> {
 
     public removeParent(): void {
         this.parentEntities.pop();
+    }
+
+    public setDependent(dependent: boolean): void {
+        this.parentEntities[0].dependent = dependent;
     }
 }
 
@@ -330,54 +346,88 @@ describe('DefaultService', (): void => {
     });
 
     it('12. setDefaultQuery', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
 
-        testService.setDefaultQuery('test', qb, {});
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
+
+        testService.setDefaultQuery(test, qb, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 'test'.'updated_at' AS 'test_updated_at', 
-            'test'.'deleted_at' AS 'test_deleted_at' 
-            FROM 'Test' 'test' 
-            WHERE 'test'.'deleted_at' IS NULL
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name',
+            '${test}'.'created_at' AS '${test}_created_at',
+            '${test}'.'updated_at' AS '${test}_updated_at',
+            '${test}'.'deleted_at' AS '${test}_deleted_at' 
+            FROM 'Test' '${test}' 
+            WHERE '${test}'.'deleted_at' IS NULL
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
 
     it('13. setDefaultQuery', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
+        const test2: string = 'test2';
 
-        testService2.setDefaultQuery('test2', qb);
+        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
+
+        testService2.setDefaultQuery(test2, qb);
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test2'.'id' AS 'test2_id', 'test2'.'deleted_at' AS 'test2_deleted_at', 'test2'.'test' AS 'test2_test', 'test2'.'testB' 
-            AS 'test2_testB' FROM 'Test2' 'test2' WHERE 'test2'.'id' > 0
+            SELECT
+            '${test2}'.'id'         AS '${test2}_id',
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at',
+            '${test2}'.'test'       AS '${test2}_test',
+            '${test2}'.'testB'      AS '${test2}_testB' 
+            FROM 'Test2' '${test2}' 
+            WHERE '${test2}'.'id' > 0
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('14. setDefaultQuery', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
+    // it('14. setDefaultQuery', async (): Promise<void> => {
+    //     const test2: string = 'test2';
+    //     const test: string = `${test2}Test`;
+    //     const testB: string = `${test2}TestB`;
 
-        testService2.setDependent(true);
+    //     const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
 
-        testService2.setDefaultQuery('test2', qb);
-        testService2.setJoins('test2', qb, {});
+    //     testService2.setDependent(true);
 
-        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test2'.'id' AS 'test2_id', 'test2'.'deleted_at' AS 'test2_deleted_at', 'test2'.'test' AS 'test2_test', 'test2'.'testB' AS 'test2_testB', 
-            'test2Test'.'id' AS 'test2Test_id', 'test2Test'.'name' AS 'test2Test_name', 'test2Test'.'created_at' AS 'test2Test_created_at', 
-            'test2Test'.'updated_at' AS 'test2Test_updated_at', 'test2Test'.'deleted_at' AS 'test2Test_deleted_at', 
-            'test2TestB'.'id' AS 'test2TestB_id', 'test2TestB'.'name' AS 'test2TestB_name', 'test2TestB'.'created_at' AS 'test2TestB_created_at', 
-            'test2TestB'.'updated_at' AS 'test2TestB_updated_at', 'test2TestB'.'deleted_at' AS 'test2TestB_deleted_at' 
-            FROM 'Test2' 'test2' 
-            INNER JOIN 'Test' 'test2Test' ON 'test2Test'.'id'='test2'.'test' 
-            INNER JOIN 'Test' 'test2TestB' ON 'test2TestB'.'id'='test2'.'testB' 
-            WHERE 'test2Test'.'deleted_at' IS NULL AND 'test2'.'id' > 0
-        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
-        expect(await qb.getCount()).to.be.eq(1);
+    //     testService2.setDefaultQuery(test2, qb);
+    //     testService2.setJoins(test2, qb, {});
 
-        testService2.setDependent(false);
-    });
+    //     expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+    //         SELECT 
+    //         '${test2}'.'id'           AS 'test2_id', 
+    //         '${test2}'.'deleted_at'   AS 'test2_deleted_at', 
+    //         '${test2}'.'test'         AS 'test2_test', 
+    //         '${test2}'.'testB'        AS 'test2_testB', 
+
+    //         '${test}'.'id'         AS '${test}_id', 
+    //         '${test}'.'name'       AS '${test}_name', 
+    //         '${test}'.'created_at' AS '${test}_created_at', 
+    //         '${test}'.'updated_at' AS '${test}_updated_at', 
+    //         '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+    //         '${testB}'.'id'         AS '${testB}_id', 
+    //         '${testB}'.'name'       AS '${testB}_name', 
+    //         '${testB}'.'created_at' AS '${testB}_created_at', 
+    //         '${testB}'.'updated_at' AS '${testB}_updated_at', 
+    //         '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+    //         FROM 'Test2' '${test2}'
+    //         INNER JOIN 'Test' '${test}' ON '${test}'.'id'='${test2}'.'test' 
+    //             AND ( '${test}'.'deleted_at' IS NULL )
+    //         INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB' 
+    //             AND ( '${testB}'.'deleted_at' IS NULL )
+
+    //         WHERE '${test}'.'deleted_at' IS NULL
+    //             AND '${test2}'.'id' > 0
+    //     `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+    //     expect(await qb.getCount()).to.be.eq(1);
+
+    //     testService2.setDependent(false);
+    // });
 
     it('15. getSorting', async (): Promise<void> => {
         expect(testService.getSorting('test', {
@@ -463,69 +513,118 @@ describe('DefaultService', (): void => {
     });
 
     it('22. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
+        const test2: string = `${test}Test2`;
+        const testB: string = `${test2}TestB`;
 
-        testService.setJoins('test', qb, {
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
+
+        testService.setJoins(test, qb, {
             subitems: ['tests']
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at', 
-            'testTest2'.'id' AS 'testTest2_id', 'testTest2'.'deleted_at' AS 'testTest2_deleted_at', 'testTest2'.'test' AS 'testTest2_test', 
-            'testTest2'.'testB' AS 'testTest2_testB', 
-            'testTest2TestB'.'id' AS 'testTest2TestB_id', 'testTest2TestB'.'name' AS 'testTest2TestB_name', 'testTest2TestB'.'created_at' AS 'testTest2TestB_created_at', 
-            'testTest2TestB'.'updated_at' AS 'testTest2TestB_updated_at', 'testTest2TestB'.'deleted_at' AS 'testTest2TestB_deleted_at' 
-            FROM 'Test' 'test'
-            LEFT JOIN 'Test2' 'testTest2' ON 'testTest2'.'test'='test'.'id'
-            LEFT JOIN 'Test' 'testTest2TestB' ON 'testTest2TestB'.'id'='testTest2'.'testB'
+            SELECT 
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+            
+            FROM 'Test' '${test}'
+            LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='${test}'.'id'
+                AND ('${test2}'.'id' > 0)
+            LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
+
     });
 
     it('23. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
+        const test2: string = `${test}Test2`;
+        const testB: string = `${test2}TestB`;
 
-        testService.setJoins('test', qb, {
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
+
+        testService.setJoins(test, qb, {
             subitems: ['tests'],
             joinType: 'innerJoinAndSelect'
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at', 
-            'testTest2'.'id' AS 'testTest2_id', 'testTest2'.'deleted_at' AS 'testTest2_deleted_at', 'testTest2'.'test' AS 'testTest2_test', 
-            'testTest2'.'testB' AS 'testTest2_testB', 
-            'testTest2TestB'.'id' AS 'testTest2TestB_id', 'testTest2TestB'.'name' AS 'testTest2TestB_name', 'testTest2TestB'.'created_at' AS 'testTest2TestB_created_at', 
-            'testTest2TestB'.'updated_at' AS 'testTest2TestB_updated_at', 'testTest2TestB'.'deleted_at' AS 'testTest2TestB_deleted_at' 
-            FROM 'Test' 'test' 
-            INNER JOIN 'Test2' 'testTest2' ON 'testTest2'.'test'='test'.'id' 
-            INNER JOIN 'Test' 'testTest2TestB' ON 'testTest2TestB'.'id'='testTest2'.'testB'
-            WHERE 'testTest2'.'id' > 0
+            SELECT 
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test' '${test}'
+            INNER JOIN 'Test2' '${test2}' ON '${test2}'.'test'='${test}'.'id'
+            INNER JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
 
     it('24. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
+        const test2: string = `${test}Test2`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
         testService.setChildJoinType('innerJoinAndSelect');
 
-        testService.setJoins('test', qb, {
+        testService.setJoins(test, qb, {
             subitems: ['tests']
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at', 
-            'testTest2'.'id' AS 'testTest2_id', 'testTest2'.'deleted_at' AS 'testTest2_deleted_at', 'testTest2'.'test' AS 'testTest2_test', 
-            'testTest2'.'testB' AS 'testTest2_testB', 
-            'testTest2TestB'.'id' AS 'testTest2TestB_id', 'testTest2TestB'.'name' AS 'testTest2TestB_name', 'testTest2TestB'.'created_at' AS 'testTest2TestB_created_at', 
-            'testTest2TestB'.'updated_at' AS 'testTest2TestB_updated_at', 'testTest2TestB'.'deleted_at' AS 'testTest2TestB_deleted_at' 
-            FROM 'Test' 'test' 
-            INNER JOIN 'Test2' 'testTest2' ON 'testTest2'.'test'='test'.'id' 
-            INNER JOIN 'Test' 'testTest2TestB' ON 'testTest2TestB'.'id'='testTest2'.'testB'
-            WHERE 'testTest2'.'id' > 0
+            SELECT 
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test' '${test}'
+            INNER JOIN 'Test2' '${test2}' ON '${test2}'.'test'='${test}'.'id'
+            INNER JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -533,24 +632,42 @@ describe('DefaultService', (): void => {
     });
 
     it('25. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
+        const test2: string = `${test}Test2`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
         testService2.setDeletedAtField('deletedAt');
 
-        testService.setJoins('test', qb, {
+        testService.setJoins(test, qb, {
             subitems: ['tests']
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at', 
-            'testTest2'.'id' AS 'testTest2_id', 'testTest2'.'deleted_at' AS 'testTest2_deleted_at', 'testTest2'.'test' AS 'testTest2_test', 
-            'testTest2'.'testB' AS 'testTest2_testB', 
-            'testTest2TestB'.'id' AS 'testTest2TestB_id', 'testTest2TestB'.'name' AS 'testTest2TestB_name', 'testTest2TestB'.'created_at' AS 'testTest2TestB_created_at', 
-            'testTest2TestB'.'updated_at' AS 'testTest2TestB_updated_at', 'testTest2TestB'.'deleted_at' AS 'testTest2TestB_deleted_at' 
-            FROM 'Test' 'test'
-            LEFT JOIN 'Test2' 'testTest2' ON 'testTest2'.'test'='test'.'id' AND ( 'testTest2'.'deleted_at' IS NULL )
-            LEFT JOIN 'Test' 'testTest2TestB' ON 'testTest2TestB'.'id'='testTest2'.'testB'
+            SELECT 
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test' '${test}'
+            LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
+                AND ('${test2}'.'deleted_at' IS NULL AND 'testTest2'.'id' > 0)
+            LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -558,24 +675,42 @@ describe('DefaultService', (): void => {
     });
 
     it('26. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
+        const test2: string = `${test}Test2`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
         testService.setAndWhere('`testTest2`.`deleted_at` IS NULL');
 
-        testService.setJoins('test', qb, {
+        testService.setJoins(test, qb, {
             subitems: ['tests']
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at', 
-            'testTest2'.'id' AS 'testTest2_id', 'testTest2'.'deleted_at' AS 'testTest2_deleted_at', 'testTest2'.'test' AS 'testTest2_test', 
-            'testTest2'.'testB' AS 'testTest2_testB', 
-            'testTest2TestB'.'id' AS 'testTest2TestB_id', 'testTest2TestB'.'name' AS 'testTest2TestB_name', 'testTest2TestB'.'created_at' AS 'testTest2TestB_created_at', 
-            'testTest2TestB'.'updated_at' AS 'testTest2TestB_updated_at', 'testTest2TestB'.'deleted_at' AS 'testTest2TestB_deleted_at' 
-            FROM 'Test' 'test'
-            LEFT JOIN 'Test2' 'testTest2' ON 'testTest2'.'test'='test'.'id' AND ( 'testTest2'.'deleted_at' IS NULL )
-            LEFT JOIN 'Test' 'testTest2TestB' ON 'testTest2TestB'.'id'='testTest2'.'testB'
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test' '${test}'
+            LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='${test}'.'id'
+                AND ('${test2}'.'id' > 0 AND '${test2}'.'deleted_at' IS NULL)
+            LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -583,25 +718,44 @@ describe('DefaultService', (): void => {
     });
 
     it('27. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
+        const test2: string = `${test}Test2`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
         testService2.setDeletedAtField('deletedAt');
         testService.setAndWhere('`testTest2`.`deleted_at` IS NULL');
 
-        testService.setJoins('test', qb, {
+        testService.setJoins(test, qb, {
             subitems: ['tests']
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at', 
-            'testTest2'.'id' AS 'testTest2_id', 'testTest2'.'deleted_at' AS 'testTest2_deleted_at', 'testTest2'.'test' AS 'testTest2_test', 
-            'testTest2'.'testB' AS 'testTest2_testB', 
-            'testTest2TestB'.'id' AS 'testTest2TestB_id', 'testTest2TestB'.'name' AS 'testTest2TestB_name', 'testTest2TestB'.'created_at' AS 'testTest2TestB_created_at',  
-            'testTest2TestB'.'updated_at' AS 'testTest2TestB_updated_at', 'testTest2TestB'.'deleted_at' AS 'testTest2TestB_deleted_at' 
-            FROM 'Test' 'test'
-            LEFT JOIN 'Test2' 'testTest2' ON 'testTest2'.'test'='test'.'id' AND ( 'testTest2'.'deleted_at' IS NULL AND 'testTest2'.'deleted_at' IS NULL )
-            LEFT JOIN 'Test' 'testTest2TestB' ON 'testTest2TestB'.'id'='testTest2'.'testB'
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test' '${test}'
+            LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
+                AND ('${test2}'.'deleted_at' IS NULL AND '${test2}'.'id' > 0
+                AND '${test2}'.'deleted_at' IS NULL)
+            LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -610,9 +764,13 @@ describe('DefaultService', (): void => {
     });
 
     it('28. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
+        const test2: string = `${test}Test2`;
+        const testB: string = `${test2}TestB`;
 
-        testService.setJoins('test', qb, {
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
+
+        testService.setJoins(test, qb, {
             subitems: ['tests'],
             andWhere: {
                 'test.tests': [
@@ -624,23 +782,41 @@ describe('DefaultService', (): void => {
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at', 
-            'testTest2'.'id' AS 'testTest2_id', 'testTest2'.'deleted_at' AS 'testTest2_deleted_at', 'testTest2'.'test' AS 'testTest2_test', 
-            'testTest2'.'testB' AS 'testTest2_testB', 
-            'testTest2TestB'.'id' AS 'testTest2TestB_id', 'testTest2TestB'.'name' AS 'testTest2TestB_name', 'testTest2TestB'.'created_at' AS 'testTest2TestB_created_at', 
-            'testTest2TestB'.'updated_at' AS 'testTest2TestB_updated_at', 'testTest2TestB'.'deleted_at' AS 'testTest2TestB_deleted_at' 
-            FROM 'Test' 'test'
-            LEFT JOIN 'Test2' 'testTest2' ON 'testTest2'.'test'='test'.'id' AND ( 'testTest2'.'id' = ? )
-            LEFT JOIN 'Test' 'testTest2TestB' ON 'testTest2TestB'.'id'='testTest2'.'testB'
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+            
+            FROM 'Test' '${test}'
+            LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
+                AND ('${test2}'.'id' > 0 AND '${test2}'.'id' = ?)
+            LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
 
     it('29. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
+        const test2: string = `${test}Test2`;
+        const testB: string = `${test2}TestB`;
 
-        testService.setJoins('test', qb, {
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
+
+        testService.setJoins(test, qb, {
             subitems: ['tests'],
             andWhere: {
                 'test.id': [
@@ -652,25 +828,43 @@ describe('DefaultService', (): void => {
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at', 
-            'testTest2'.'id' AS 'testTest2_id', 'testTest2'.'deleted_at' AS 'testTest2_deleted_at', 'testTest2'.'test' AS 'testTest2_test', 
-            'testTest2'.'testB' AS 'testTest2_testB', 
-            'testTest2TestB'.'id' AS 'testTest2TestB_id', 'testTest2TestB'.'name' AS 'testTest2TestB_name', 'testTest2TestB'.'created_at' AS 'testTest2TestB_created_at', 
-            'testTest2TestB'.'updated_at' AS 'testTest2TestB_updated_at', 'testTest2TestB'.'deleted_at' AS 'testTest2TestB_deleted_at' 
-            FROM 'Test' 'test'
-            LEFT JOIN 'Test2' 'testTest2' ON 'testTest2'.'test'='test'.'id'
-            LEFT JOIN 'Test' 'testTest2TestB' ON 'testTest2TestB'.'id'='testTest2'.'testB'
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test' '${test}'
+            LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
+                AND ('${test2}'.'id' > 0)
+            LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
 
     it('30. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
+        const test2: string = `${test}Test2`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
         testService2.setDeletedAtField('deletedAt');
 
-        testService.setJoins('test', qb, {
+        testService.setJoins(test, qb, {
             subitems: ['tests'],
             andWhere: {
                 'test.tests': [
@@ -682,15 +876,29 @@ describe('DefaultService', (): void => {
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at', 
-            'testTest2'.'id' AS 'testTest2_id', 'testTest2'.'deleted_at' AS 'testTest2_deleted_at', 'testTest2'.'test' AS 'testTest2_test', 
-            'testTest2'.'testB' AS 'testTest2_testB', 
-            'testTest2TestB'.'id' AS 'testTest2TestB_id', 'testTest2TestB'.'name' AS 'testTest2TestB_name', 'testTest2TestB'.'created_at' AS 'testTest2TestB_created_at', 
-            'testTest2TestB'.'updated_at' AS 'testTest2TestB_updated_at', 'testTest2TestB'.'deleted_at' AS 'testTest2TestB_deleted_at' 
-            FROM 'Test' 'test'
-            LEFT JOIN 'Test2' 'testTest2' ON 'testTest2'.'test'='test'.'id' AND ( 'testTest2'.'deleted_at' IS NULL AND 'testTest2'.'id' = ? )
-            LEFT JOIN 'Test' 'testTest2TestB' ON 'testTest2TestB'.'id'='testTest2'.'testB'
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test' '${test}'
+            LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
+                AND ('${test2}'.'deleted_at' IS NULL AND '${test2}'.'id' > 0 AND '${test2}'.'id' = ?)
+            LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -698,23 +906,41 @@ describe('DefaultService', (): void => {
     });
 
     it('31. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
+        const test2: string = `${test}Test2`;
+        const testB: string = `${test2}TestB`;
 
-        testService.setJoins('test', qb, {
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
+
+        testService.setJoins(test, qb, {
             subitems: ['tests'],
             ignore: ['other']
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at', 
-            'testTest2'.'id' AS 'testTest2_id', 'testTest2'.'deleted_at' AS 'testTest2_deleted_at', 'testTest2'.'test' AS 'testTest2_test', 
-            'testTest2'.'testB' AS 'testTest2_testB', 
-            'testTest2TestB'.'id' AS 'testTest2TestB_id', 'testTest2TestB'.'name' AS 'testTest2TestB_name', 'testTest2TestB'.'created_at' AS 'testTest2TestB_created_at', 
-            'testTest2TestB'.'updated_at' AS 'testTest2TestB_updated_at', 'testTest2TestB'.'deleted_at' AS 'testTest2TestB_deleted_at' 
-            FROM 'Test' 'test'
-            LEFT JOIN 'Test2' 'testTest2' ON 'testTest2'.'test'='test'.'id'
-            LEFT JOIN 'Test' 'testTest2TestB' ON 'testTest2TestB'.'id'='testTest2'.'testB'
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test' '${test}'
+            LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
+                AND ('${test2}'.'id' > 0)
+            LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -722,73 +948,119 @@ describe('DefaultService', (): void => {
     });
 
     it('32. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
 
-        testService.setJoins('test', qb, {
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
+
+        testService.setJoins(test, qb, {
             subitems: ['tests'],
             ignore: ['testTest2']
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at' 
-            FROM 'Test' 'test'
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at'
+            FROM 'Test' '${test}'
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
 
     it('33. setJoins', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+        const test: string = 'test';
 
-        testService.setJoins('test', qb, {
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
+
+        testService.setJoins(test, qb, {
             subitems: ['tests'],
             only: 'other'
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at' 
-            FROM 'Test' 'test'
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at'
+            FROM 'Test' '${test}'
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
 
     it('34. setJoins', async (): Promise<void> => {
+        const test2: string = 'test2';
+        const test: string = `${test2}Test`;
+        const testB: string = `${test2}TestB`;
+
         const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
 
-        testService2.setJoins('test2', qb, {});
+        testService2.setJoins(test2, qb, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test2'.'id' AS 'test2_id', 'test2'.'deleted_at' AS 'test2_deleted_at', 'test2'.'test' AS 'test2_test', 
-            'test2'.'testB' AS 'test2_testB', 
-            'test2Test'.'id' AS 'test2Test_id', 'test2Test'.'name' AS 'test2Test_name', 'test2Test'.'created_at' AS 'test2Test_created_at', 
-            'test2Test'.'updated_at' AS 'test2Test_updated_at', 'test2Test'.'deleted_at' AS 'test2Test_deleted_at', 
-            'test2TestB'.'id' AS 'test2TestB_id', 'test2TestB'.'name' AS 'test2TestB_name', 'test2TestB'.'created_at' AS 'test2TestB_created_at', 
-            'test2TestB'.'updated_at' AS 'test2TestB_updated_at', 'test2TestB'.'deleted_at' AS 'test2TestB_deleted_at' 
-            FROM 'Test2' 'test2'
-            INNER JOIN 'Test' 'test2Test' ON 'test2Test'.'id'='test2'.'test'
-            INNER JOIN 'Test' 'test2TestB' ON 'test2TestB'.'id'='test2'.'testB'
+            SELECT
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+            
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+            
+            FROM 'Test2' '${test2}'
+            INNER JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test'
+            INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
 
     it('35. setJoins', async (): Promise<void> => {
+        const test2: string = 'test2';
+        const test: string = `${test2}Test`;
+        const testB: string = `${test2}TestB`;
+
         const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
 
         testService2.setParentJoinType('leftJoinAndSelect');
 
-        testService2.setJoins('test2', qb, {});
+        testService2.setJoins(test2, qb, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test2'.'id' AS 'test2_id', 'test2'.'deleted_at' AS 'test2_deleted_at', 'test2'.'test' AS 'test2_test',
-            'test2'.'testB' AS 'test2_testB', 
-            'test2Test'.'id' AS 'test2Test_id', 'test2Test'.'name' AS 'test2Test_name', 'test2Test'.'created_at' AS 'test2Test_created_at', 
-            'test2Test'.'updated_at' AS 'test2Test_updated_at', 'test2Test'.'deleted_at' AS 'test2Test_deleted_at', 
-            'test2TestB'.'id' AS 'test2TestB_id', 'test2TestB'.'name' AS 'test2TestB_name', 'test2TestB'.'created_at' AS 'test2TestB_created_at', 
-            'test2TestB'.'updated_at' AS 'test2TestB_updated_at', 'test2TestB'.'deleted_at' AS 'test2TestB_deleted_at' 
-            FROM 'Test2' 'test2'
-            LEFT JOIN 'Test' 'test2Test' ON 'test2Test'.'id'='test2'.'test'
-            LEFT JOIN 'Test' 'test2TestB' ON 'test2TestB'.'id'='test2'.'testB'
+            SELECT
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+            
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test2' '${test2}'
+            LEFT JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test'
+                AND ('${test}'.'deleted_at' IS NULL)
+            LEFT JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -796,76 +1068,342 @@ describe('DefaultService', (): void => {
     });
 
     it('36. setJoins', async (): Promise<void> => {
+        const test2: string = 'test2';
+        const test: string = `${test2}Test`;
+        const testB: string = `${test2}TestB`;
+
         const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
 
-        testService2.setJoins('test2', qb, {
+        testService2.setJoins(test2, qb, {
             joinType: 'leftJoinAndSelect'
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test2'.'id' AS 'test2_id', 'test2'.'deleted_at' AS 'test2_deleted_at', 'test2'.'test' AS 'test2_test',
-            'test2'.'testB' AS 'test2_testB', 
-            'test2Test'.'id' AS 'test2Test_id', 'test2Test'.'name' AS 'test2Test_name', 'test2Test'.'created_at' AS 'test2Test_created_at', 
-            'test2Test'.'updated_at' AS 'test2Test_updated_at', 'test2Test'.'deleted_at' AS 'test2Test_deleted_at', 
-            'test2TestB'.'id' AS 'test2TestB_id', 'test2TestB'.'name' AS 'test2TestB_name', 'test2TestB'.'created_at' AS 'test2TestB_created_at', 
-            'test2TestB'.'updated_at' AS 'test2TestB_updated_at', 'test2TestB'.'deleted_at' AS 'test2TestB_deleted_at' 
-            FROM 'Test2' 'test2'
-            LEFT JOIN 'Test' 'test2Test' ON 'test2Test'.'id'='test2'.'test'
-            LEFT JOIN 'Test' 'test2TestB' ON 'test2TestB'.'id'='test2'.'testB'
+            SELECT
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+            
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test2' '${test2}'
+            LEFT JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test'
+                AND ('${test}'.'deleted_at' IS NULL)
+            LEFT JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
 
     it('37. setJoins', async (): Promise<void> => {
+        const test2: string = 'test2';
+        const test: string = `${test2}Test`;
+        const testB: string = `${test2}TestB`;
+
         const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
 
-        testService2.setJoins('test2', qb, {
+        testService2.setJoins(test2, qb, {
             ignore: ['other']
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test2'.'id' AS 'test2_id', 'test2'.'deleted_at' AS 'test2_deleted_at', 'test2'.'test' AS 'test2_test',
-            'test2'.'testB' AS 'test2_testB', 
-            'test2Test'.'id' AS 'test2Test_id', 'test2Test'.'name' AS 'test2Test_name', 'test2Test'.'created_at' AS 'test2Test_created_at', 
-            'test2Test'.'updated_at' AS 'test2Test_updated_at', 'test2Test'.'deleted_at' AS 'test2Test_deleted_at', 
-            'test2TestB'.'id' AS 'test2TestB_id', 'test2TestB'.'name' AS 'test2TestB_name', 'test2TestB'.'created_at' AS 'test2TestB_created_at', 
-            'test2TestB'.'updated_at' AS 'test2TestB_updated_at', 'test2TestB'.'deleted_at' AS 'test2TestB_deleted_at' 
-            FROM 'Test2' 'test2'
-            INNER JOIN 'Test' 'test2Test' ON 'test2Test'.'id'='test2'.'test'
-            INNER JOIN 'Test' 'test2TestB' ON 'test2TestB'.'id'='test2'.'testB'
+            SELECT
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+            
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test2' '${test2}'
+            INNER JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test'
+            INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
 
     it('38. setJoins', async (): Promise<void> => {
+        const test2: string = 'test2';
+
         const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
 
-        testService2.setJoins('test2', qb, {
+        testService2.setJoins(test2, qb, {
             only: 'other'
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test2'.'id' AS 'test2_id', 'test2'.'deleted_at' AS 'test2_deleted_at', 'test2'.'test' AS 'test2_test', 
-            'test2'.'testB' AS 'test2_testB' 
-            FROM 'Test2' 'test2'
+            SELECT
+           '${test2}'.'id'           AS 'test2_id', 
+           '${test2}'.'deleted_at'   AS 'test2_deleted_at', 
+           '${test2}'.'test'         AS 'test2_test', 
+           '${test2}'.'testB'        AS 'test2_testB' 
+
+            FROM 'Test2' '${test2}'
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
 
-    it('39. setPagination', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+    it('39. setJoins', async (): Promise<void> => {
+        const test2: string = 'test2';
+        const test: string = `${test2}Test`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
+
+        testService.setDeletedField(undefined);
+
+        testService2.setJoins(test2, qb, {});
+
+        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+            SELECT
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+            
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test2' '${test2}'
+            INNER JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test' 
+            INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+        expect(await qb.getCount()).to.be.eq(1);
+
+        testService.setDeletedField('deletedAt');
+    });
+
+    it('39. setJoins', async (): Promise<void> => {
+        const test2: string = 'test2';
+        const test: string = `${test2}Test`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
+
+        testService2.setDependent(true);
+
+        testService2.setJoins(test2, qb, {});
+
+        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+            SELECT
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+            
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test2' '${test2}'
+            INNER JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test' 
+            INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+            WHERE '${test}'.'deleted_at' IS NULL
+        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+        expect(await qb.getCount()).to.be.eq(1);
+
+        testService2.setDependent(false);
+    });
+
+    it('39. setJoins', async (): Promise<void> => {
+        const test2: string = 'test2';
+        const test: string = `${test2}Test`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
+
+        testService2.setJoins(test2, qb, {
+            andWhere: {
+                'test2.test': [
+                    'test2Test.id = :id', {
+                        id: 1
+                    }
+                ]
+            }
+        });
+
+        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+            SELECT
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+            
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test2' '${test2}'
+            INNER JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test'
+                AND ('${test}'.'id' = ?) 
+            INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+        expect(await qb.getCount()).to.be.eq(1);
+    });
+
+    it('39. setJoins', async (): Promise<void> => {
+        const test: string = 'test';
+        const test2: string = `${test}Test2`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
+
+        testService.setDependent(true);
+
+        testService.setJoins(test, qb, {
+            subitems: ['tests'],
+            joinType: 'innerJoinAndSelect',
+            andWhere: {
+                'test.tests': [
+                    'testTest2.id = :id', {
+                        id: 1
+                    }
+                ]
+            }
+        });
+
+        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test' '${test}'
+            INNER JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
+                AND ('testTest2'.'id' = ?)
+            INNER JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+            WHERE '${test2}'.'id' > 0
+        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+        expect(await qb.getCount()).to.be.eq(1);
+
+        testService.setDependent(false);
+    });
+
+    it('39. setJoins', async (): Promise<void> => {
+        const test2: string = 'test2';
+        const test: string = `${test2}Test`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
+
+        testService2.setParentJoinType('leftJoinAndSelect');
+
+        testService2.setJoins(test2, qb, {
+            sort: {
+                'test.id': 1
+            }
+        });
+
+        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+            SELECT
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+            
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test2' '${test2}'
+            LEFT JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test'
+                AND ('${test}'.'deleted_at' IS NULL)
+            LEFT JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
+        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+        expect(await qb.getCount()).to.be.eq(1);
+    });
+
+    it('40. setPagination', async (): Promise<void> => {
+        const test: string = 'test';
+
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
         testService.setPagination(qb, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at' FROM 'Test' 'test'
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name',
+            '${test}'.'created_at' AS '${test}_created_at',
+            '${test}'.'updated_at' AS '${test}_updated_at',
+            '${test}'.'deleted_at' AS '${test}_deleted_at' 
+            FROM 'Test' '${test}'
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect((await qb.getMany()).length).to.be.eq(1);
     });
 
-    it('40. setPagination', async (): Promise<void> => {
-        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder('test');
+    it('41. setPagination', async (): Promise<void> => {
+        const test: string = 'test';
+
+        const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
         const paginate: Paginate = new Paginate(app, {
             _limit: 10,
@@ -877,98 +1415,133 @@ describe('DefaultService', (): void => {
         });
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-        SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-        'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at' FROM 'Test' 'test' LIMIT 10 OFFSET 2
+        SELECT
+        '${test}'.'id'         AS '${test}_id', 
+        '${test}'.'name'       AS '${test}_name',
+        '${test}'.'created_at' AS '${test}_created_at',
+        '${test}'.'updated_at' AS '${test}_updated_at',
+        '${test}'.'deleted_at' AS '${test}_deleted_at' 
+        FROM 'Test' '${test}' LIMIT 10 OFFSET 2
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect((await qb.getMany()).length).to.be.eq(0);
     });
 
-    it('41. list', async (): Promise<void> => {
+    it('42. list', async (): Promise<void> => {
+        const test: string = 'test';
+
         let sql: string;
         testService.debug.log = (data: string): void => {
             sql = data;
         };
 
-        const items: Test[] = await testService.list('test', (qb: SelectQueryBuilder<Test>): void => {
-            qb.andWhere(`test.id = :id`, {
+        const items: Test[] = await testService.list(test, (qb: SelectQueryBuilder<Test>): void => {
+            qb.andWhere(`${test}.id = :id`, {
                 id: 1
-            })
+            });
         }, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at' 
-            FROM 'Test' 'test'
-            WHERE 'test'.'id' = ? AND 'test'.'deleted_at' IS NULL
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name',
+            '${test}'.'created_at' AS '${test}_created_at',
+            '${test}'.'updated_at' AS '${test}_updated_at',
+            '${test}'.'deleted_at' AS '${test}_deleted_at' 
+            FROM 'Test' '${test}' 
+            WHERE '${test}'.'id' = ?
+            AND '${test}'.'deleted_at' IS NULL
             ORDER BY 'test'.'name' ASC
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(items.length).to.be.eq(1);
     });
 
-    it('42. count', async (): Promise<void> => {
+    it('43. count', async (): Promise<void> => {
+        const test: string = 'test';
+
         let sql: string;
         testService.debug.log = (data: string): void => {
             sql = data;
         };
 
-        const total: number = await testService.count('test', (qb: SelectQueryBuilder<Test>): void => {
-            qb.andWhere(`test.id = :id`, {
+        const total: number = await testService.count(test, (qb: SelectQueryBuilder<Test>): void => {
+            qb.andWhere(`${test}.id = :id`, {
                 id: 1
-            })
+            });
         }, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at' 
-            FROM 'Test' 'test'
-            WHERE 'test'.'id' = ? AND 'test'.'deleted_at' IS NULL
-            ORDER BY 'test'.'name' ASC
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name',
+            '${test}'.'created_at' AS '${test}_created_at',
+            '${test}'.'updated_at' AS '${test}_updated_at',
+            '${test}'.'deleted_at' AS '${test}_deleted_at' 
+            FROM 'Test' '${test}' 
+            WHERE '${test}'.'id' = ?
+            AND '${test}'.'deleted_at' IS NULL
+            ORDER BY '${test}'.'name' ASC
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(total).to.be.eq(1);
     });
 
-    it('43. listAndCount', async (): Promise<void> => {
+    it('44. listAndCount', async (): Promise<void> => {
+        const test: string = 'test';
+
         let sql: string;
         testService.debug.log = (data: string): void => {
             sql = data;
         };
 
-        const [items, total]: [Test[], number] = await testService.listAndCount('test', (qb: SelectQueryBuilder<Test>): void => {
-            qb.andWhere(`test.id = :id`, {
+        const [items, total]: [Test[], number] = await testService.listAndCount(test, (qb: SelectQueryBuilder<Test>): void => {
+            qb.andWhere(`${test}.id = :id`, {
                 id: 1
-            })
+            });
         }, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at' 
-            FROM 'Test' 'test'
-            WHERE 'test'.'id' = ? AND 'test'.'deleted_at' IS NULL
-            ORDER BY 'test'.'name' ASC
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name',
+            '${test}'.'created_at' AS '${test}_created_at',
+            '${test}'.'updated_at' AS '${test}_updated_at',
+            '${test}'.'deleted_at' AS '${test}_deleted_at' 
+            FROM 'Test' '${test}'
+            WHERE '${test}'.'id' = ? 
+            AND '${test}'.'deleted_at' IS NULL 
+            ORDER BY '${test}'.'name' ASC
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(items.length).to.be.eq(1);
         expect(total).to.be.eq(1);
     });
 
-    it('44. listBy', async (): Promise<void> => {
+    it('45. listBy', async (): Promise<void> => {
+        const test: string = 'test';
+
         let sql: string;
         testService.debug.log = (data: string): void => {
             sql = data;
         };
 
-        const items: Test[] = await testService.listBy('test', 'id', 1, {});
+        const items: Test[] = await testService.listBy(test, 'id', 1, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at' 
-            FROM 'Test' 'test'
-            WHERE 'test'.'id' = ? AND 'test'.'deleted_at' IS NULL
-            ORDER BY 'test'.'name' ASC
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name',
+            '${test}'.'created_at' AS '${test}_created_at',
+            '${test}'.'updated_at' AS '${test}_updated_at',
+            '${test}'.'deleted_at' AS '${test}_deleted_at' 
+            FROM 'Test' '${test}'
+            WHERE '${test}'.'id' = ?
+            AND '${test}'.'deleted_at' IS NULL
+            ORDER BY '${test}'.'name' ASC
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(items.length).to.be.eq(1);
     });
 
-    it('45. findById', async (): Promise<void> => {
+    it('46. findById', async (): Promise<void> => {
+        const test: string = 'test';
+
         let sql: string;
         testService.debug.log = (data: string): void => {
             sql = data;
@@ -977,15 +1550,22 @@ describe('DefaultService', (): void => {
         const item: Test = await testService.findById('test', 1, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at' 
-            FROM 'Test' 'test'
-            WHERE 'test'.'id' = ? AND 'test'.'deleted_at' IS NULL
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name',
+            '${test}'.'created_at' AS '${test}_created_at',
+            '${test}'.'updated_at' AS '${test}_updated_at',
+            '${test}'.'deleted_at' AS '${test}_deleted_at' 
+            FROM 'Test' '${test}'
+            WHERE '${test}'.'id' = ?
+            AND '${test}'.'deleted_at' IS NULL
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(item).to.exist;
     });
 
-    it('46. findBy', async (): Promise<void> => {
+    it('47. findBy', async (): Promise<void> => {
+        const test: string = 'test';
+
         let sql: string;
         testService.debug.log = (data: string): void => {
             sql = data;
@@ -994,36 +1574,48 @@ describe('DefaultService', (): void => {
         const item: Test = await testService.findBy('test', 'id', 1, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at' 
-            FROM 'Test' 'test'
-            WHERE 'test'.'id' = ? AND 'test'.'deleted_at' IS NULL
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name',
+            '${test}'.'created_at' AS '${test}_created_at',
+            '${test}'.'updated_at' AS '${test}_updated_at',
+            '${test}'.'deleted_at' AS '${test}_deleted_at' 
+            FROM 'Test' '${test}'
+            WHERE '${test}'.'id' = ?
+            AND '${test}'.'deleted_at' IS NULL
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(item).to.exist;
     });
 
-    it('47. find', async (): Promise<void> => {
+    it('48. find', async (): Promise<void> => {
+        const test: string = 'test';
+
         let sql: string;
         testService.debug.log = (data: string): void => {
             sql = data;
         };
 
         const item: Test = await testService.find('test', (qb: SelectQueryBuilder<Test>): void => {
-            qb.andWhere(`test.id = :id`, {
+            qb.andWhere(`${test}.id = :id`, {
                 id: 1
-            })
+            });
         }, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
-            SELECT 'test'.'id' AS 'test_id', 'test'.'name' AS 'test_name', 'test'.'created_at' AS 'test_created_at', 
-            'test'.'updated_at' AS 'test_updated_at', 'test'.'deleted_at' AS 'test_deleted_at' 
-            FROM 'Test' 'test'
-            WHERE 'test'.'id' = ? AND 'test'.'deleted_at' IS NULL
+            SELECT
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name',
+            '${test}'.'created_at' AS '${test}_created_at',
+            '${test}'.'updated_at' AS '${test}_updated_at',
+            '${test}'.'deleted_at' AS '${test}_deleted_at' 
+            FROM 'Test' '${test}'
+            WHERE '${test}'.'id' = ?
+            AND '${test}'.'deleted_at' IS NULL
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(item).to.exist;
     });
 
-    it('48. save', async (): Promise<void> => {
+    it('49. save', async (): Promise<void> => {
         let item: Test = new Test();
         item.name = 'test';
 
@@ -1036,11 +1628,11 @@ describe('DefaultService', (): void => {
         expect(await testService.findById('test', item.id, {})).to.exist;
     });
 
-    it('49. save', async (): Promise<void> => {
+    it('50. save', async (): Promise<void> => {
         expect(await testService.save(undefined)).to.be.undefined;
     });
 
-    it('50. save', async (): Promise<void> => {
+    it('51. save', async (): Promise<void> => {
         let item: Test = new Test();
         item.name = 'test';
 
@@ -1054,7 +1646,7 @@ describe('DefaultService', (): void => {
         expect(item.updatedAt).to.exist;
     });
 
-    it('51. save', async (): Promise<void> => {
+    it('52. save', async (): Promise<void> => {
         let id: number;
         let err: Error;
         try {
@@ -1077,7 +1669,7 @@ describe('DefaultService', (): void => {
         expect(await testService.findById('test', id, {})).to.not.exist;
     });
 
-    it('52. remove', async (): Promise<void> => {
+    it('53. remove', async (): Promise<void> => {
         let item: Test = new Test();
         item.name = 'test';
 
@@ -1090,7 +1682,7 @@ describe('DefaultService', (): void => {
         expect(await testService.findById('test', item.id, {})).to.not.exist;
     });
 
-    it('53. remove', async (): Promise<void> => {
+    it('54. remove', async (): Promise<void> => {
         let item: Test = new Test();
         item.name = 'test';
 

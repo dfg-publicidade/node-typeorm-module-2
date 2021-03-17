@@ -1,3 +1,4 @@
+import { SelectQueryBuilder } from 'typeorm';
 import ChildEntity from '../interfaces/childEntity';
 import ParentEntity from '../interfaces/parentEntity';
 import ServiceOptions from '../interfaces/serviceOptions';
@@ -65,6 +66,39 @@ abstract class ServiceUtil {
         }
 
         return [undefined, undefined];
+    }
+
+    public static queryToString(qb: SelectQueryBuilder<any>, andWhereParamValue: any): {
+        where: string;
+        params: any;
+    } {
+        let where: string = qb.getQuery();
+
+        if (where.indexOf('WHERE') === -1) {
+            return undefined;
+        }
+        else {
+            let end: number = where.indexOf('ORDER BY');
+
+            if (end === -1) {
+                end = where.indexOf('GROUP BY');
+            }
+
+            if (end === -1) {
+                end = where.indexOf('LIMIT BY');
+            }
+
+            if (end === -1) {
+                end = where.length;
+            }
+
+            where = where.substring(where.indexOf('WHERE') + 'WHERE'.length, end).trim();
+
+            return {
+                where,
+                params: andWhereParamValue
+            };
+        }
     }
 
     private static isNotOnly(serviceOptions: ServiceOptions<any>, name: string): boolean {

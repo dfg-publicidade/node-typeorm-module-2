@@ -18,7 +18,7 @@ declare abstract class DefaultService<T> {
     protected constructor(repositoryType: ObjectType<T>, connectionName: string);
     getRepository(): Repository<T>;
     translateParams(param: string, alias?: string): string;
-    setJoins(alias: string, qb: any, serviceOptions: ServiceOptions<Subitem>): void;
+    setJoins(alias: string, qb: SelectQueryBuilder<T>, serviceOptions: ServiceOptions<Subitem>): void;
     setDefaultQuery(alias: string, qb: any, serviceOptions: ServiceOptions<Subitem>, options?: any): void;
     getSorting(alias: string, serviceOptions: ServiceOptions<Subitem>): any;
     setPagination(qb: any, serviceOptions: ServiceOptions<Subitem>): void;
