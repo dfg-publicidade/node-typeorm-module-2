@@ -134,18 +134,20 @@ class DefaultService {
     getSorting(alias, serviceOptions) {
         let sort = {};
         if (!serviceOptions || !serviceOptions.sort || Object.keys(serviceOptions.sort).length === 0) {
-            for (const key of Object.keys(this.defaultSorting)) {
-                if (key.indexOf('$alias') !== 0) {
-                    throw new Error('Sort keys must start with \'$alias.\'');
-                }
-                sort[key.replace('$alias', alias)] = this.defaultSorting[key];
-            }
             serviceUtil_1.default.forParents(alias, this.parentEntities, (alias, parent, serviceOptions) => {
                 sort = Object.assign(Object.assign({}, sort), parent.service.getInstance(this.connectionName).getSorting(alias + parent.alias, {
                     ignore: serviceOptions.ignore,
                     only: parent.only
                 }));
             }, serviceOptions);
+            for (const key of Object.keys(this.defaultSorting)) {
+                if (key.indexOf('$alias') !== 0) {
+                    throw new Error('Sort keys must start with \'$alias.\'');
+                }
+                const defaultSort = {};
+                defaultSort[key.replace('$alias', alias)] = this.defaultSorting[key];
+                sort = Object.assign(Object.assign({}, sort), defaultSort);
+            }
             serviceUtil_1.default.forChilds(alias, this.childEntities, (alias, child, serviceOptions) => {
                 sort = Object.assign(Object.assign({}, sort), child.service.getInstance(this.connectionName).getSorting(alias + child.alias, {
                     origin: alias,

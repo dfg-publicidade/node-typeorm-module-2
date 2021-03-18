@@ -199,14 +199,6 @@ abstract class DefaultService<T> {
         let sort: any = {};
 
         if (!serviceOptions || !serviceOptions.sort || Object.keys(serviceOptions.sort).length === 0) {
-            for (const key of Object.keys(this.defaultSorting)) {
-                if (key.indexOf('$alias') !== 0) {
-                    throw new Error('Sort keys must start with \'$alias.\'');
-                }
-
-                sort[key.replace('$alias', alias)] = this.defaultSorting[key];
-            }
-
             ServiceUtil.forParents(alias, this.parentEntities, (
                 alias: string,
                 parent: ParentEntity,
@@ -221,6 +213,20 @@ abstract class DefaultService<T> {
                 };
             }, serviceOptions);
 
+            for (const key of Object.keys(this.defaultSorting)) {
+                if (key.indexOf('$alias') !== 0) {
+                    throw new Error('Sort keys must start with \'$alias.\'');
+                }
+
+                const defaultSort: any = {};
+                defaultSort[key.replace('$alias', alias)] = this.defaultSorting[key];
+
+                sort = {
+                    ...sort,
+                    ...defaultSort
+                };
+            }
+
             ServiceUtil.forChilds(alias, this.childEntities, (
                 alias: string,
                 child: ChildEntity,
@@ -234,6 +240,7 @@ abstract class DefaultService<T> {
                         only: child.only
                     })
                 };
+
             }, serviceOptions);
         }
         else {
