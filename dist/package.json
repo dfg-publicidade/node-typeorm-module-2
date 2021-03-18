@@ -7,7 +7,7 @@
         "check": "eslint src --ext .ts",
         "compile:clean": "npm run check && gulp install && tsc --project tsconfig.json",
         "compile": "tsc --project tsconfig.json",
-        "test": "gulp clean && TS_NODE_FILES=true NODE_ENV=test NODE_OPTIONS=\"--max-old-space-size=4096\" nyc --reporter=html --reporter=text mocha --exit --timeout=100000",
+        "test": "TS_NODE_FILES=true NODE_ENV=test NODE_OPTIONS=\"--max-old-space-size=4096\" nyc --reporter=html --reporter=text mocha --exit --timeout=100000",
         "test:all": "DEBUG=module:*,sql:* npm run test test/**/*.spec.ts test/**/**/*.spec.ts test/**/**/**/*.spec.ts"
     },
     "dependencies": {
