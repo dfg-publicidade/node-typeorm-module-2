@@ -965,7 +965,7 @@ describe('DefaultService', (): void => {
         const test: string = `${test2}Test`;
         const testB: string = `${test2}TestB`;
 
-        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
+        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
 
         testService2.setJoins(test2, qb, {});
 
@@ -1000,7 +1000,7 @@ describe('DefaultService', (): void => {
         const test: string = `${test2}Test`;
         const testB: string = `${test2}TestB`;
 
-        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
+        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
 
         testService2.setParentJoinType('leftJoinAndSelect');
 
@@ -1041,7 +1041,7 @@ describe('DefaultService', (): void => {
         const test: string = `${test2}Test`;
         const testB: string = `${test2}TestB`;
 
-        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
+        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
 
         testService2.setJoins(test2, qb, {
             joinType: 'leftJoinAndSelect'
@@ -1080,7 +1080,7 @@ describe('DefaultService', (): void => {
         const test: string = `${test2}Test`;
         const testB: string = `${test2}TestB`;
 
-        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
+        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
 
         testService2.setJoins(test2, qb, {
             ignore: ['other']
@@ -1115,7 +1115,7 @@ describe('DefaultService', (): void => {
     it('38. setJoins', async (): Promise<void> => {
         const test2: string = 'test2';
 
-        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder('test2');
+        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
 
         testService2.setJoins(test2, qb, {
             only: 'other'
