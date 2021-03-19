@@ -114,7 +114,7 @@ abstract class DefaultService<T> {
                 parentQb.andWhere(andWhereParam);
             }
 
-            const query: any = ServiceUtil.queryToString(parentQb, andWhereParamValue);
+            const query: any = ServiceUtil.queryToString(alias + parent.alias, alias, parentQb, andWhereParamValue);
 
             qb[parentJoinType](
                 `${alias}.${parent.name}`,
@@ -124,6 +124,7 @@ abstract class DefaultService<T> {
             );
 
             parent.service.getInstance(this.connectionName).setJoins(alias + parent.alias, qb, {
+                origin: alias,
                 joinType: parentJoinType,
                 subitems: parent.subitems,
                 ignore: serviceOptions.ignore,
@@ -165,7 +166,7 @@ abstract class DefaultService<T> {
                 childQb.andWhere(andWhereParam);
             }
 
-            const query: any = ServiceUtil.queryToString(childQb, andWhereParamValue);
+            const query: any = ServiceUtil.queryToString(alias + child.alias, alias, childQb, andWhereParamValue);
 
             qb[childJoinType](
                 `${alias}.${child.name}`,

@@ -1,5 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const node_strings_module_1 = __importDefault(require("@dfgpublicidade/node-strings-module"));
 /* Module */
 class ServiceUtil {
     static forParents(alias, parentEntities, action, serviceOptions) {
@@ -42,7 +46,7 @@ class ServiceUtil {
         }
         return [undefined, undefined];
     }
-    static queryToString(qb, andWhereParamValue) {
+    static queryToString(refAlias, alias, qb, andWhereParamValue) {
         let where = qb.getQuery();
         if (where.indexOf('WHERE') === -1) {
             return undefined;
@@ -59,9 +63,10 @@ class ServiceUtil {
                 end = where.length;
             }
             where = where.substring(where.indexOf('WHERE') + 'WHERE'.length, end).trim();
+            where = where.replace(`${refAlias}${node_strings_module_1.default.firstCharToUpper(alias)}`, alias);
             return {
                 where,
-                params: andWhereParamValue
+                params: Object.assign(Object.assign({}, qb.getParameters()), andWhereParamValue)
             };
         }
     }
@@ -72,7 +77,7 @@ class ServiceUtil {
         return serviceOptions.ignore && serviceOptions.ignore.indexOf(alias) !== -1;
     }
     static isNotOrigin(serviceOptions, parent) {
-        return !serviceOptions || !serviceOptions.origin || parent.name !== serviceOptions.origin && !parent.alias.endsWith(serviceOptions.origin);
+        return !serviceOptions || !serviceOptions.origin || parent.name !== serviceOptions.origin && !serviceOptions.origin.endsWith(parent.alias);
     }
 }
 exports.default = ServiceUtil;

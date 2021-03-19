@@ -81,9 +81,10 @@ class DefaultService {
             if (andWhereParam) {
                 parentQb.andWhere(andWhereParam);
             }
-            const query = serviceUtil_1.default.queryToString(parentQb, andWhereParamValue);
+            const query = serviceUtil_1.default.queryToString(alias + parent.alias, alias, parentQb, andWhereParamValue);
             qb[parentJoinType](`${alias}.${parent.name}`, alias + parent.alias, query === null || query === void 0 ? void 0 : query.where, query === null || query === void 0 ? void 0 : query.params);
             parent.service.getInstance(this.connectionName).setJoins(alias + parent.alias, qb, {
+                origin: alias,
                 joinType: parentJoinType,
                 subitems: parent.subitems,
                 ignore: serviceOptions.ignore,
@@ -111,7 +112,7 @@ class DefaultService {
             if (andWhereParam) {
                 childQb.andWhere(andWhereParam);
             }
-            const query = serviceUtil_1.default.queryToString(childQb, andWhereParamValue);
+            const query = serviceUtil_1.default.queryToString(alias + child.alias, alias, childQb, andWhereParamValue);
             qb[childJoinType](`${alias}.${child.name}`, alias + child.alias, query === null || query === void 0 ? void 0 : query.where, query === null || query === void 0 ? void 0 : query.params);
             childService.setJoins(alias + child.alias, qb, {
                 origin: alias,

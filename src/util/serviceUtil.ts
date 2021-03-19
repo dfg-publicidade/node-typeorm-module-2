@@ -1,3 +1,4 @@
+import Strings from '@dfgpublicidade/node-strings-module';
 import { SelectQueryBuilder } from 'typeorm';
 import ChildEntity from '../interfaces/childEntity';
 import ParentEntity from '../interfaces/parentEntity';
@@ -68,7 +69,7 @@ abstract class ServiceUtil {
         return [undefined, undefined];
     }
 
-    public static queryToString(qb: SelectQueryBuilder<any>, andWhereParamValue: any): {
+    public static queryToString(refAlias: string, alias: string, qb: SelectQueryBuilder<any>, andWhereParamValue: any): {
         where: string;
         params: any;
     } {
@@ -93,10 +94,14 @@ abstract class ServiceUtil {
             }
 
             where = where.substring(where.indexOf('WHERE') + 'WHERE'.length, end).trim();
+            where = where.replace(`${refAlias}${Strings.firstCharToUpper(alias)}`, alias);
 
             return {
                 where,
-                params: andWhereParamValue
+                params: {
+                    ...qb.getParameters(),
+                    ...andWhereParamValue
+                }
             };
         }
     }
@@ -110,7 +115,7 @@ abstract class ServiceUtil {
     }
 
     private static isNotOrigin(serviceOptions: ServiceOptions<any>, parent: ParentEntity): boolean {
-        return !serviceOptions || !serviceOptions.origin || parent.name !== serviceOptions.origin && !parent.alias.endsWith(serviceOptions.origin);
+        return !serviceOptions || !serviceOptions.origin || parent.name !== serviceOptions.origin && !serviceOptions.origin.endsWith(parent.alias);
     }
 }
 
