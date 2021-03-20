@@ -177,7 +177,7 @@ abstract class DefaultService<T> {
 
             childService.setJoins(alias + child.alias, qb, {
                 origin: alias,
-                joinType: childJoinType,
+                joinType: childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect' ? childJoinType : 'leftJoinAndSelect',
                 subitems: child.subitems,
                 ignore: serviceOptions.ignore ? serviceOptions.ignore : undefined,
                 only: child.only,

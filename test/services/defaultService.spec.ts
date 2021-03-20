@@ -554,7 +554,8 @@ describe('DefaultService', (): void => {
 
             FROM 'Test' '${test}'
             INNER JOIN 'Test2' '${test2}' ON '${test2}'.'test'='${test}'.'id'
-            INNER JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+            LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+            AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
@@ -593,7 +594,8 @@ describe('DefaultService', (): void => {
 
             FROM 'Test' '${test}'
             INNER JOIN 'Test2' '${test2}' ON '${test2}'.'test'='${test}'.'id'
-            INNER JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+            LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+            AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -1299,7 +1301,8 @@ describe('DefaultService', (): void => {
             FROM 'Test' '${test}'
             INNER JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
                 AND ('testTest2'.'id' = ?)
-            INNER JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+            LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
             WHERE '${test2}'.'id' > 0
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);

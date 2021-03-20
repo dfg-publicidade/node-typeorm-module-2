@@ -116,7 +116,7 @@ class DefaultService {
             qb[childJoinType](`${alias}.${child.name}`, alias + child.alias, query === null || query === void 0 ? void 0 : query.where, query === null || query === void 0 ? void 0 : query.params);
             childService.setJoins(alias + child.alias, qb, {
                 origin: alias,
-                joinType: childJoinType,
+                joinType: childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect' ? childJoinType : 'leftJoinAndSelect',
                 subitems: child.subitems,
                 ignore: serviceOptions.ignore ? serviceOptions.ignore : undefined,
                 only: child.only,
