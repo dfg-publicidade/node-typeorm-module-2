@@ -63,7 +63,7 @@ class ServiceUtil {
                 end = where.length;
             }
             where = where.substring(where.indexOf('WHERE') + 'WHERE'.length, end).trim();
-            where = where.replace(`${refAlias}${node_strings_module_1.default.firstCharToUpper(alias)}`, alias);
+            where = where.replace(new RegExp(`${refAlias}${node_strings_module_1.default.firstCharToUpper(alias)}`, 'g'), alias);
             return {
                 where,
                 params: Object.assign(Object.assign({}, qb.getParameters()), andWhereParamValue)

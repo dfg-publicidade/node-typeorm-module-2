@@ -94,7 +94,7 @@ abstract class ServiceUtil {
             }
 
             where = where.substring(where.indexOf('WHERE') + 'WHERE'.length, end).trim();
-            where = where.replace(`${refAlias}${Strings.firstCharToUpper(alias)}`, alias);
+            where = where.replace(new RegExp(`${refAlias}${Strings.firstCharToUpper(alias)}`, 'g'), alias);
 
             return {
                 where,
