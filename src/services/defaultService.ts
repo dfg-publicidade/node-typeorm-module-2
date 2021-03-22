@@ -125,7 +125,6 @@ abstract class DefaultService<T> {
 
             parent.service.getInstance(this.connectionName).setJoins(alias + parent.alias, qb, {
                 origin: alias,
-                joinType: parentJoinType,
                 subitems: parent.subitems,
                 ignore: serviceOptions.ignore,
                 only: parent.only,
