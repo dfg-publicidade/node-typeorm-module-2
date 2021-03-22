@@ -420,10 +420,7 @@ describe('DefaultService', (): void => {
     });
 
     it('17. getSorting', async (): Promise<void> => {
-        expect(testService2.getSorting('test2', {})).to.be.deep.eq({
-            'test2Test.name': 'ASC',
-            'test2TestB.name': 'ASC'
-        });
+        expect(testService2.getSorting('test2', {})).to.be.deep.eq({});
     });
 
     it('18. getSorting', async (): Promise<void> => {
@@ -432,8 +429,6 @@ describe('DefaultService', (): void => {
         });
 
         expect(testService2.getSorting('test2', {})).to.be.deep.eq({
-            'test2Test.name': 'ASC',
-            'test2TestB.name': 'ASC',
             'test2.title': 'ASC'
         });
 
@@ -443,9 +438,7 @@ describe('DefaultService', (): void => {
     it('19. getSorting', async (): Promise<void> => {
         expect(testService2.getSorting('test2', {
             ignore: ['test2Test']
-        })).to.be.deep.eq({
-            'test2TestB.name': 'ASC'
-        });
+        })).to.be.deep.eq({});
     });
 
     it('20. getSorting', async (): Promise<void> => {
@@ -457,7 +450,6 @@ describe('DefaultService', (): void => {
             subitems: ['tests', 'others']
         })).to.be.deep.eq({
             'test.name': 'ASC',
-            'testTest2TestB.name': 'ASC',
             'testTest2.title': 'ASC'
         });
 
@@ -474,7 +466,6 @@ describe('DefaultService', (): void => {
             ignore: ['others']
         })).to.be.deep.eq({
             'testTest2.title': 'ASC',
-            'testTest2TestB.name': 'ASC',
             'test.name': 'ASC'
         });
 
@@ -1347,6 +1338,36 @@ describe('DefaultService', (): void => {
             FROM 'Test2' '${test2}'
             LEFT JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test'
                 AND ('${test}'.'deleted_at' IS NULL)
+            LEFT JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+                AND ('${testB}'.'deleted_at' IS NULL)
+        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+        expect(await qb.getCount()).to.be.eq(1);
+    });
+
+    it('44. setJoins', async (): Promise<void> => {
+        const test2: string = 'test2';
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
+
+        testService2.setJoins(test2, qb, {
+            ignore: ['test2Test']
+        });
+
+        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+            SELECT
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test2' '${test2}'
             LEFT JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
                 AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());

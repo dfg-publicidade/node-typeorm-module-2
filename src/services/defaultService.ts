@@ -200,20 +200,6 @@ abstract class DefaultService<T> {
         let sort: any = {};
 
         if (!serviceOptions || !serviceOptions.sort || Object.keys(serviceOptions.sort).length === 0) {
-            ServiceUtil.forParents(alias, this.parentEntities, (
-                alias: string,
-                parent: ParentEntity,
-                serviceOptions?: ServiceOptions<Subitem>
-            ): void => {
-                sort = {
-                    ...sort,
-                    ...parent.service.getInstance(this.connectionName).getSorting(alias + parent.alias, {
-                        ignore: serviceOptions.ignore,
-                        only: parent.only
-                    })
-                };
-            }, serviceOptions);
-
             for (const key of Object.keys(this.defaultSorting)) {
                 if (key.indexOf('$alias') !== 0) {
                     throw new Error('Sort keys must start with \'$alias.\'');
