@@ -12,7 +12,7 @@ class TypeOrmManager {
 
     public static async connect(config: any): Promise<Connection> {
         debug('Connection request received');
-        
+
         if (!config) {
             throw new Error('Connection config. was not provided.');
         }
@@ -73,7 +73,7 @@ class TypeOrmManager {
         if (!name) {
             throw new Error('Connection name was not provided.');
         }
-        
+
         return connectionManager.has(name)
             ? connectionManager.get(name)
             : undefined;
@@ -86,7 +86,7 @@ class TypeOrmManager {
         if (!config.name) {
             throw new Error('Connection name was not provided.');
         }
-        
+
         if (TypeOrmManager.getConnection(config.name) && TypeOrmManager.getConnection(config.name).isConnected) {
             await Util.delay100ms();
             debug('Waiting for connection.');

@@ -78,7 +78,7 @@ class DefaultService extends serviceUtil_1.default {
             throw new Error('Alias was not provided.');
         }
         if (!qb) {
-            throw new Error('Query Builder was not provided.');
+            throw new Error('Query builder was not provided.');
         }
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
@@ -147,7 +147,7 @@ class DefaultService extends serviceUtil_1.default {
             throw new Error('Alias was not provided.');
         }
         if (!qb) {
-            throw new Error('Query Builder was not provided.');
+            throw new Error('Query builder was not provided.');
         }
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
@@ -192,7 +192,7 @@ class DefaultService extends serviceUtil_1.default {
     }
     setPagination(qb, serviceOptions) {
         if (!qb) {
-            throw new Error('Query Builder was not provided.');
+            throw new Error('Query builder was not provided.');
         }
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
@@ -303,7 +303,7 @@ class DefaultService extends serviceUtil_1.default {
             throw new Error('Alias was not provided.');
         }
         if (!queryParser) {
-            throw new Error('Query parser name was not provided.');
+            throw new Error('Query parser was not provided.');
         }
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
