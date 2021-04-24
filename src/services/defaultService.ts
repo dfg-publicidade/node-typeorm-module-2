@@ -30,12 +30,12 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     protected constructor(repositoryType: ObjectType<T>, connectionName: string) {
         super();
-        
+
         if (!repositoryType) {
-            throw new Error('Repository type was not provided.')
+            throw new Error('Repository type was not provided.');
         }
         if (!connectionName) {
-            throw new Error('Connection name was not provided.')
+            throw new Error('Connection name was not provided.');
         }
 
         this.repositoryType = repositoryType;
@@ -100,15 +100,15 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     public setJoins(alias: string, qb: SelectQueryBuilder<T>, serviceOptions: ServiceOptions<Subitem>): void {
         if (!alias) {
-            throw new Error('Alias was not provided.')
+            throw new Error('Alias was not provided.');
         }
         if (!qb) {
-            throw new Error('Query builder was not provided.')
+            throw new Error('Query builder was not provided.');
         }
         if (!serviceOptions) {
-            throw new Error('Service options was not provided.')
+            throw new Error('Service options was not provided.');
         }
-        
+
         DefaultService.forParents(alias, this.parentEntities, (
             alias: string,
             parent: ParentEntity,
@@ -211,15 +211,15 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     public setDefaultQuery(alias: string, qb: any, serviceOptions: ServiceOptions<Subitem>, options?: any): void {
         if (!alias) {
-            throw new Error('Alias was not provided.')
+            throw new Error('Alias was not provided.');
         }
         if (!qb) {
-            throw new Error('Query builder was not provided.')
+            throw new Error('Query builder was not provided.');
         }
         if (!serviceOptions) {
-            throw new Error('Service options was not provided.')
+            throw new Error('Service options was not provided.');
         }
-        
+
         if (this.deletedAtField) {
             qb.andWhere(`${alias}.${this.deletedAtField} IS NULL`);
         }
@@ -227,10 +227,10 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     public getSorting(alias: string, serviceOptions: ServiceOptions<Subitem>): any {
         if (!alias) {
-            throw new Error('Alias was not provided.')
+            throw new Error('Alias was not provided.');
         }
         if (!serviceOptions) {
-            throw new Error('Service options was not provided.')
+            throw new Error('Service options was not provided.');
         }
 
         let sort: any = {};
@@ -281,12 +281,12 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     public setPagination(qb: any, serviceOptions: ServiceOptions<Subitem>): void {
         if (!qb) {
-            throw new Error('Query builder was not provided.')
+            throw new Error('Query builder was not provided.');
         }
         if (!serviceOptions) {
-            throw new Error('Service options was not provided.')
+            throw new Error('Service options was not provided.');
         }
-        
+
         if (serviceOptions.paginate) {
             qb.take(serviceOptions.paginate.getLimit());
             qb.skip(serviceOptions.paginate.getSkip());
@@ -295,13 +295,13 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     public async list(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T[]> {
         if (!alias) {
-            throw new Error('Alias was not provided.')
+            throw new Error('Alias was not provided.');
         }
         if (!queryParser) {
-            throw new Error('Query parser was not provided.')
+            throw new Error('Query parser was not provided.');
         }
         if (!serviceOptions) {
-            throw new Error('Service options was not provided.')
+            throw new Error('Service options was not provided.');
         }
 
         const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
@@ -313,15 +313,15 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     public async count(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<number> {
         if (!alias) {
-            throw new Error('Alias was not provided.')
+            throw new Error('Alias was not provided.');
         }
         if (!queryParser) {
-            throw new Error('Query parser was not provided.')
+            throw new Error('Query parser was not provided.');
         }
         if (!serviceOptions) {
-            throw new Error('Service options was not provided.')
+            throw new Error('Service options was not provided.');
         }
-        
+
         const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
 
         debug(qb.getSql());
@@ -331,15 +331,15 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     public async listAndCount(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<[T[], number]> {
         if (!alias) {
-            throw new Error('Alias was not provided.')
+            throw new Error('Alias was not provided.');
         }
         if (!queryParser) {
-            throw new Error('Query parser was not provided.')
+            throw new Error('Query parser was not provided.');
         }
         if (!serviceOptions) {
-            throw new Error('Service options was not provided.')
+            throw new Error('Service options was not provided.');
         }
-        
+
         const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
 
         debug(qb.getSql());
@@ -349,13 +349,13 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     public async listBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T[]> {
         if (!alias) {
-            throw new Error('Alias was not provided.')
+            throw new Error('Alias was not provided.');
         }
         if (!fieldName) {
-            throw new Error('Field name was not provided.')
+            throw new Error('Field name was not provided.');
         }
         if (!serviceOptions) {
-            throw new Error('Service options was not provided.')
+            throw new Error('Service options was not provided.');
         }
 
         const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, (qb: SelectQueryBuilder<T>): void => {
@@ -372,13 +372,13 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     public async findById(alias: string, id: number, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T> {
         if (!alias) {
-            throw new Error('Alias was not provided.')
+            throw new Error('Alias was not provided.');
         }
         if (!id) {
-            throw new Error('ID was not provided.')
+            throw new Error('ID was not provided.');
         }
         if (!serviceOptions) {
-            throw new Error('Service options was not provided.')
+            throw new Error('Service options was not provided.');
         }
 
         const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, (qb: SelectQueryBuilder<T>): void => {
@@ -394,13 +394,13 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     public async findBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T> {
         if (!alias) {
-            throw new Error('Alias was not provided.')
+            throw new Error('Alias was not provided.');
         }
         if (!fieldName) {
-            throw new Error('Field name was not provided.')
+            throw new Error('Field name was not provided.');
         }
         if (!serviceOptions) {
-            throw new Error('Service options was not provided.')
+            throw new Error('Service options was not provided.');
         }
 
         const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, (qb: SelectQueryBuilder<T>): void => {
@@ -417,13 +417,13 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     public async find(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T> {
         if (!alias) {
-            throw new Error('Alias was not provided.')
+            throw new Error('Alias was not provided.');
         }
         if (!queryParser) {
-            throw new Error('Query parser was not provided.')
+            throw new Error('Query parser was not provided.');
         }
         if (!serviceOptions) {
-            throw new Error('Service options was not provided.')
+            throw new Error('Service options was not provided.');
         }
 
         const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, queryParser, serviceOptions, options);
