@@ -6,13 +6,13 @@ import ServiceOptions from '../interfaces/serviceOptions';
 
 /* Module */
 abstract class ServiceUtil {
-    public static forParents(
+    protected static forParents(
         alias: string,
         parentEntities: ParentEntity[],
         action: (
             alias: string,
             parent: ParentEntity,
-            serviceOptions?: ServiceOptions<any>
+            serviceOptions: ServiceOptions<any>
         ) => void,
         serviceOptions: ServiceOptions<any>
     ): void {
@@ -30,13 +30,13 @@ abstract class ServiceUtil {
         }
     }
 
-    public static forChilds(
+    protected static forChilds(
         alias: string,
         childEntities: ChildEntity[],
         action: (
             alias: string,
             child: ChildEntity,
-            serviceOptions?: ServiceOptions<any>
+            serviceOptions: ServiceOptions<any>
         ) => void,
         serviceOptions: ServiceOptions<any>
     ): void {
@@ -57,7 +57,7 @@ abstract class ServiceUtil {
         }
     }
 
-    public static parseAndWhere(alias: string, name: string, andWhere: any): [string, any] {
+    protected static parseAndWhere(alias: string, name: string, andWhere: any): [string, any] {
         if (andWhere) {
             for (const andWhereKey of Object.keys(andWhere)) {
                 if (`${alias}.${name}` === andWhereKey) {
@@ -69,7 +69,7 @@ abstract class ServiceUtil {
         return [undefined, undefined];
     }
 
-    public static queryToString(refAlias: string, alias: string, qb: SelectQueryBuilder<any>, andWhereParamValue: any): {
+    protected static queryToString(refAlias: string, alias: string, qb: SelectQueryBuilder<any>, andWhereParamValue: any): {
         where: string;
         params: any;
     } {

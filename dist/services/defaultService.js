@@ -8,8 +8,9 @@ const typeOrmManager_1 = __importDefault(require("../datasources/typeOrmManager"
 const serviceUtil_1 = __importDefault(require("../util/serviceUtil"));
 /* Module */
 const debug = debug_1.default('sql:typeorm-default-service');
-class DefaultService {
+class DefaultService extends serviceUtil_1.default {
     constructor(repositoryType, connectionName) {
+        super();
         this.idField = 'id';
         this.createdAtField = 'createdAt';
         this.updatedAtField = 'updatedAt';
@@ -17,6 +18,12 @@ class DefaultService {
         this.defaultSorting = {};
         this.parentEntities = [];
         this.childEntities = [];
+        if (!repositoryType) {
+            throw new Error('Repository type was not provided.');
+        }
+        if (!connectionName) {
+            throw new Error('Connection name was not provided.');
+        }
         this.repositoryType = repositoryType;
         this.connectionName = connectionName;
         this.debug = debug;
@@ -67,13 +74,22 @@ class DefaultService {
         }
     }
     setJoins(alias, qb, serviceOptions) {
-        serviceUtil_1.default.forParents(alias, this.parentEntities, (alias, parent, serviceOptions) => {
+        if (!alias) {
+            throw new Error('Alias was not provided.');
+        }
+        if (!qb) {
+            throw new Error('Query Builder was not provided.');
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.');
+        }
+        DefaultService.forParents(alias, this.parentEntities, (alias, parent, serviceOptions) => {
             const parentService = parent.service.getInstance(this.connectionName);
             let parentJoinType = parent.joinType ? parent.joinType : 'innerJoinAndSelect';
             if ((parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect') && serviceOptions.joinType) {
                 parentJoinType = serviceOptions.joinType;
             }
-            const [andWhereParam, andWhereParamValue] = serviceUtil_1.default.parseAndWhere(alias, parent.name, serviceOptions.andWhere);
+            const [andWhereParam, andWhereParamValue] = DefaultService.parseAndWhere(alias, parent.name, serviceOptions.andWhere);
             const parentQb = parentService.getRepository().createQueryBuilder(alias + parent.alias);
             if (!parent.dependent && (parentJoinType === 'leftJoin' || parentJoinType === 'leftJoinAndSelect')) {
                 parentService.setDefaultQuery(alias + parent.alias, parentQb, serviceOptions);
@@ -81,7 +97,7 @@ class DefaultService {
             if (andWhereParam) {
                 parentQb.andWhere(andWhereParam);
             }
-            const query = serviceUtil_1.default.queryToString(alias + parent.alias, alias, parentQb, andWhereParamValue);
+            const query = DefaultService.queryToString(alias + parent.alias, alias, parentQb, andWhereParamValue);
             qb[parentJoinType](`${alias}.${parent.name}`, alias + parent.alias, query === null || query === void 0 ? void 0 : query.where, query === null || query === void 0 ? void 0 : query.params);
             parent.service.getInstance(this.connectionName).setJoins(alias + parent.alias, qb, {
                 origin: alias,
@@ -94,7 +110,7 @@ class DefaultService {
                 parentService.setDefaultQuery(alias + parent.alias, qb, serviceOptions);
             }
         }, serviceOptions);
-        serviceUtil_1.default.forChilds(alias, this.childEntities, (alias, child, serviceOptions) => {
+        DefaultService.forChilds(alias, this.childEntities, (alias, child, serviceOptions) => {
             const childService = child.service.getInstance(this.connectionName);
             let childJoinType = child.joinType ? child.joinType : 'leftJoinAndSelect';
             if ((childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect') && serviceOptions.joinType) {
@@ -107,11 +123,11 @@ class DefaultService {
             if (child.andWhere) {
                 childQb.andWhere(child.andWhere);
             }
-            const [andWhereParam, andWhereParamValue] = serviceUtil_1.default.parseAndWhere(alias, child.name, serviceOptions.andWhere);
+            const [andWhereParam, andWhereParamValue] = DefaultService.parseAndWhere(alias, child.name, serviceOptions.andWhere);
             if (andWhereParam) {
                 childQb.andWhere(andWhereParam);
             }
-            const query = serviceUtil_1.default.queryToString(alias + child.alias, alias, childQb, andWhereParamValue);
+            const query = DefaultService.queryToString(alias + child.alias, alias, childQb, andWhereParamValue);
             qb[childJoinType](`${alias}.${child.name}`, alias + child.alias, query === null || query === void 0 ? void 0 : query.where, query === null || query === void 0 ? void 0 : query.params);
             childService.setJoins(alias + child.alias, qb, {
                 origin: alias,
@@ -127,11 +143,26 @@ class DefaultService {
         }, serviceOptions);
     }
     setDefaultQuery(alias, qb, serviceOptions, options) {
+        if (!alias) {
+            throw new Error('Alias was not provided.');
+        }
+        if (!qb) {
+            throw new Error('Query Builder was not provided.');
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.');
+        }
         if (this.deletedAtField) {
             qb.andWhere(`${alias}.${this.deletedAtField} IS NULL`);
         }
     }
     getSorting(alias, serviceOptions) {
+        if (!alias) {
+            throw new Error('Alias was not provided.');
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.');
+        }
         let sort = {};
         if (!serviceOptions || !serviceOptions.sort || Object.keys(serviceOptions.sort).length === 0) {
             for (const key of Object.keys(this.defaultSorting)) {
@@ -142,7 +173,7 @@ class DefaultService {
                 defaultSort[key.replace('$alias', alias)] = this.defaultSorting[key];
                 sort = Object.assign(Object.assign({}, sort), defaultSort);
             }
-            serviceUtil_1.default.forChilds(alias, this.childEntities, (alias, child, serviceOptions) => {
+            DefaultService.forChilds(alias, this.childEntities, (alias, child, serviceOptions) => {
                 sort = Object.assign(Object.assign({}, sort), child.service.getInstance(this.connectionName).getSorting(alias + child.alias, {
                     origin: alias,
                     ignore: serviceOptions.ignore,
@@ -160,27 +191,69 @@ class DefaultService {
         return sort;
     }
     setPagination(qb, serviceOptions) {
+        if (!qb) {
+            throw new Error('Query Builder was not provided.');
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.');
+        }
         if (serviceOptions.paginate) {
             qb.take(serviceOptions.paginate.getLimit());
             qb.skip(serviceOptions.paginate.getSkip());
         }
     }
-    async list(alias, parseQuery, serviceOptions, options) {
-        const qb = this.prepareListQuery(alias, parseQuery, serviceOptions, options);
+    async list(alias, queryParser, serviceOptions, options) {
+        if (!alias) {
+            throw new Error('Alias was not provided.');
+        }
+        if (!queryParser) {
+            throw new Error('Query parser was not provided.');
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.');
+        }
+        const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
         debug(qb.getSql());
         return qb.getMany();
     }
-    async count(alias, parseQuery, serviceOptions, options) {
-        const qb = this.prepareListQuery(alias, parseQuery, serviceOptions, options);
+    async count(alias, queryParser, serviceOptions, options) {
+        if (!alias) {
+            throw new Error('Alias was not provided.');
+        }
+        if (!queryParser) {
+            throw new Error('Query parser was not provided.');
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.');
+        }
+        const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
         debug(qb.getSql());
         return qb.getCount();
     }
-    async listAndCount(alias, parseQuery, serviceOptions, options) {
-        const qb = this.prepareListQuery(alias, parseQuery, serviceOptions, options);
+    async listAndCount(alias, queryParser, serviceOptions, options) {
+        if (!alias) {
+            throw new Error('Alias was not provided.');
+        }
+        if (!queryParser) {
+            throw new Error('Query parser was not provided.');
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.');
+        }
+        const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
         debug(qb.getSql());
         return qb.getManyAndCount();
     }
     async listBy(alias, fieldName, fieldValue, serviceOptions, options) {
+        if (!alias) {
+            throw new Error('Alias was not provided.');
+        }
+        if (!fieldName) {
+            throw new Error('Field name was not provided.');
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.');
+        }
         const qb = this.prepareListQuery(alias, (qb) => {
             const findParamValue = {};
             findParamValue[fieldName] = fieldValue;
@@ -190,6 +263,15 @@ class DefaultService {
         return qb.getMany();
     }
     async findById(alias, id, serviceOptions, options) {
+        if (!alias) {
+            throw new Error('Alias was not provided.');
+        }
+        if (!id) {
+            throw new Error('ID was not provided.');
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.');
+        }
         const qb = this.prepareQuery(alias, (qb) => {
             qb.where(`${alias}.${this.idField} = :id`, {
                 id
@@ -199,6 +281,15 @@ class DefaultService {
         return qb.getOne();
     }
     async findBy(alias, fieldName, fieldValue, serviceOptions, options) {
+        if (!alias) {
+            throw new Error('Alias was not provided.');
+        }
+        if (!fieldName) {
+            throw new Error('Field name was not provided.');
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.');
+        }
         const qb = this.prepareQuery(alias, (qb) => {
             const findParamValue = {};
             findParamValue[fieldName] = fieldValue;
@@ -207,8 +298,17 @@ class DefaultService {
         debug(qb.getSql());
         return qb.getOne();
     }
-    async find(alias, parseQuery, serviceOptions, options) {
-        const qb = this.prepareQuery(alias, parseQuery, serviceOptions, options);
+    async find(alias, queryParser, serviceOptions, options) {
+        if (!alias) {
+            throw new Error('Alias was not provided.');
+        }
+        if (!queryParser) {
+            throw new Error('Query parser name was not provided.');
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.');
+        }
+        const qb = this.prepareQuery(alias, queryParser, serviceOptions, options);
         debug(qb.getSql());
         return qb.getOne();
     }
@@ -240,15 +340,15 @@ class DefaultService {
             return repository.save(entity);
         }
     }
-    prepareQuery(alias, parseQuery, serviceOptions, options) {
+    prepareQuery(alias, queryParser, serviceOptions, options) {
         const qb = this.getRepository().createQueryBuilder(alias);
         this.setJoins(alias, qb, serviceOptions);
-        parseQuery(qb);
+        queryParser(qb);
         this.setDefaultQuery(alias, qb, serviceOptions, options);
         return qb;
     }
-    prepareListQuery(alias, parseQuery, serviceOptions, options) {
-        const qb = this.prepareQuery(alias, parseQuery, serviceOptions, options);
+    prepareListQuery(alias, queryParser, serviceOptions, options) {
+        const qb = this.prepareQuery(alias, queryParser, serviceOptions, options);
         qb.orderBy(this.getSorting(alias, serviceOptions));
         this.setPagination(qb, serviceOptions);
         return qb;

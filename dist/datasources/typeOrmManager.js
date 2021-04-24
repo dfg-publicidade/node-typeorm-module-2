@@ -12,6 +12,12 @@ const connectionManager = typeorm_1.getConnectionManager();
 class TypeOrmManager {
     static async connect(config) {
         debug('Connection request received');
+        if (!config) {
+            throw new Error('Connection config. was not provided.');
+        }
+        if (!config.name) {
+            throw new Error('Connection name was not provided.');
+        }
         let conn;
         if (connectionManager.has(config.name) && (conn = connectionManager.get(config.name)).isConnected) {
             debug('Delivering previously made connection');
@@ -37,6 +43,9 @@ class TypeOrmManager {
     }
     static async close(name) {
         debug('Closing connection');
+        if (!name) {
+            throw new Error('Connection name was not provided.');
+        }
         try {
             if (connectionManager.get(name).isConnected) {
                 await connectionManager.get(name).close();
@@ -49,11 +58,20 @@ class TypeOrmManager {
         }
     }
     static getConnection(name) {
+        if (!name) {
+            throw new Error('Connection name was not provided.');
+        }
         return connectionManager.has(name)
             ? connectionManager.get(name)
             : undefined;
     }
     static async wait(config) {
+        if (!config) {
+            throw new Error('Config. was not provided.');
+        }
+        if (!config.name) {
+            throw new Error('Connection name was not provided.');
+        }
         if (TypeOrmManager.getConnection(config.name) && TypeOrmManager.getConnection(config.name).isConnected) {
             await node_util_module_1.default.delay100ms();
             debug('Waiting for connection.');

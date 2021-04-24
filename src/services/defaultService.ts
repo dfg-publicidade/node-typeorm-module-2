@@ -1,3 +1,4 @@
+import { Service as ParamService } from '@dfgpublicidade/node-params-module';
 import appDebugger from 'debug';
 import { Connection, EntityManager, ObjectType, Repository, SelectQueryBuilder } from 'typeorm';
 import TypeOrmManager from '../datasources/typeOrmManager';
@@ -12,7 +13,7 @@ const debug: appDebugger.IDebugger = appDebugger('sql:typeorm-default-service');
 
 type Subitem = string;
 
-abstract class DefaultService<T> {
+abstract class DefaultService<T> extends ServiceUtil implements ParamService {
     public idField: string = 'id';
     public createdAtField: string = 'createdAt';
     public updatedAtField: string = 'updatedAt';
@@ -28,6 +29,15 @@ abstract class DefaultService<T> {
     private repositoryType: ObjectType<T>;
 
     protected constructor(repositoryType: ObjectType<T>, connectionName: string) {
+        super();
+        
+        if (!repositoryType) {
+            throw new Error('Repository type was not provided.')
+        }
+        if (!connectionName) {
+            throw new Error('Connection name was not provided.')
+        }
+
         this.repositoryType = repositoryType;
         this.connectionName = connectionName;
         this.debug = debug;
@@ -89,10 +99,20 @@ abstract class DefaultService<T> {
     }
 
     public setJoins(alias: string, qb: SelectQueryBuilder<T>, serviceOptions: ServiceOptions<Subitem>): void {
-        ServiceUtil.forParents(alias, this.parentEntities, (
+        if (!alias) {
+            throw new Error('Alias was not provided.')
+        }
+        if (!qb) {
+            throw new Error('Query builder was not provided.')
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.')
+        }
+        
+        DefaultService.forParents(alias, this.parentEntities, (
             alias: string,
             parent: ParentEntity,
-            serviceOptions?: ServiceOptions<Subitem>
+            serviceOptions: ServiceOptions<Subitem>
         ): void => {
             const parentService: DefaultService<any> = parent.service.getInstance(this.connectionName);
 
@@ -102,7 +122,7 @@ abstract class DefaultService<T> {
                 parentJoinType = serviceOptions.joinType;
             }
 
-            const [andWhereParam, andWhereParamValue]: [string, any] = ServiceUtil.parseAndWhere(alias, parent.name, serviceOptions.andWhere);
+            const [andWhereParam, andWhereParamValue]: [string, any] = DefaultService.parseAndWhere(alias, parent.name, serviceOptions.andWhere);
 
             const parentQb: SelectQueryBuilder<any> = parentService.getRepository().createQueryBuilder(alias + parent.alias);
 
@@ -114,7 +134,7 @@ abstract class DefaultService<T> {
                 parentQb.andWhere(andWhereParam);
             }
 
-            const query: any = ServiceUtil.queryToString(alias + parent.alias, alias, parentQb, andWhereParamValue);
+            const query: any = DefaultService.queryToString(alias + parent.alias, alias, parentQb, andWhereParamValue);
 
             qb[parentJoinType](
                 `${alias}.${parent.name}`,
@@ -136,10 +156,10 @@ abstract class DefaultService<T> {
             }
         }, serviceOptions);
 
-        ServiceUtil.forChilds(alias, this.childEntities, (
+        DefaultService.forChilds(alias, this.childEntities, (
             alias: string,
             child: ChildEntity,
-            serviceOptions?: ServiceOptions<Subitem>
+            serviceOptions: ServiceOptions<Subitem>
         ): void => {
             const childService: DefaultService<any> = child.service.getInstance(this.connectionName);
 
@@ -159,13 +179,13 @@ abstract class DefaultService<T> {
                 childQb.andWhere(child.andWhere);
             }
 
-            const [andWhereParam, andWhereParamValue]: [string, any] = ServiceUtil.parseAndWhere(alias, child.name, serviceOptions.andWhere);
+            const [andWhereParam, andWhereParamValue]: [string, any] = DefaultService.parseAndWhere(alias, child.name, serviceOptions.andWhere);
 
             if (andWhereParam) {
                 childQb.andWhere(andWhereParam);
             }
 
-            const query: any = ServiceUtil.queryToString(alias + child.alias, alias, childQb, andWhereParamValue);
+            const query: any = DefaultService.queryToString(alias + child.alias, alias, childQb, andWhereParamValue);
 
             qb[childJoinType](
                 `${alias}.${child.name}`,
@@ -190,12 +210,29 @@ abstract class DefaultService<T> {
     }
 
     public setDefaultQuery(alias: string, qb: any, serviceOptions: ServiceOptions<Subitem>, options?: any): void {
+        if (!alias) {
+            throw new Error('Alias was not provided.')
+        }
+        if (!qb) {
+            throw new Error('Query builder was not provided.')
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.')
+        }
+        
         if (this.deletedAtField) {
             qb.andWhere(`${alias}.${this.deletedAtField} IS NULL`);
         }
     }
 
     public getSorting(alias: string, serviceOptions: ServiceOptions<Subitem>): any {
+        if (!alias) {
+            throw new Error('Alias was not provided.')
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.')
+        }
+
         let sort: any = {};
 
         if (!serviceOptions || !serviceOptions.sort || Object.keys(serviceOptions.sort).length === 0) {
@@ -213,10 +250,10 @@ abstract class DefaultService<T> {
                 };
             }
 
-            ServiceUtil.forChilds(alias, this.childEntities, (
+            DefaultService.forChilds(alias, this.childEntities, (
                 alias: string,
                 child: ChildEntity,
-                serviceOptions?: ServiceOptions<Subitem>
+                serviceOptions: ServiceOptions<Subitem>
             ): void => {
                 sort = {
                     ...sort,
@@ -243,30 +280,67 @@ abstract class DefaultService<T> {
     }
 
     public setPagination(qb: any, serviceOptions: ServiceOptions<Subitem>): void {
+        if (!qb) {
+            throw new Error('Query builder was not provided.')
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.')
+        }
+        
         if (serviceOptions.paginate) {
             qb.take(serviceOptions.paginate.getLimit());
             qb.skip(serviceOptions.paginate.getSkip());
         }
     }
 
-    public async list(alias: string, parseQuery: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T[]> {
-        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, parseQuery, serviceOptions, options);
+    public async list(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T[]> {
+        if (!alias) {
+            throw new Error('Alias was not provided.')
+        }
+        if (!queryParser) {
+            throw new Error('Query parser was not provided.')
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.')
+        }
+
+        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
 
         debug(qb.getSql());
 
         return qb.getMany();
     }
 
-    public async count(alias: string, parseQuery: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<number> {
-        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, parseQuery, serviceOptions, options);
+    public async count(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<number> {
+        if (!alias) {
+            throw new Error('Alias was not provided.')
+        }
+        if (!queryParser) {
+            throw new Error('Query parser was not provided.')
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.')
+        }
+        
+        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
 
         debug(qb.getSql());
 
         return qb.getCount();
     }
 
-    public async listAndCount(alias: string, parseQuery: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<[T[], number]> {
-        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, parseQuery, serviceOptions, options);
+    public async listAndCount(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<[T[], number]> {
+        if (!alias) {
+            throw new Error('Alias was not provided.')
+        }
+        if (!queryParser) {
+            throw new Error('Query parser was not provided.')
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.')
+        }
+        
+        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
 
         debug(qb.getSql());
 
@@ -274,6 +348,16 @@ abstract class DefaultService<T> {
     }
 
     public async listBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T[]> {
+        if (!alias) {
+            throw new Error('Alias was not provided.')
+        }
+        if (!fieldName) {
+            throw new Error('Field name was not provided.')
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.')
+        }
+
         const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, (qb: SelectQueryBuilder<T>): void => {
             const findParamValue: any = {};
             findParamValue[fieldName] = fieldValue;
@@ -287,6 +371,16 @@ abstract class DefaultService<T> {
     }
 
     public async findById(alias: string, id: number, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T> {
+        if (!alias) {
+            throw new Error('Alias was not provided.')
+        }
+        if (!id) {
+            throw new Error('ID was not provided.')
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.')
+        }
+
         const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, (qb: SelectQueryBuilder<T>): void => {
             qb.where(`${alias}.${this.idField} = :id`, {
                 id
@@ -299,6 +393,16 @@ abstract class DefaultService<T> {
     }
 
     public async findBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T> {
+        if (!alias) {
+            throw new Error('Alias was not provided.')
+        }
+        if (!fieldName) {
+            throw new Error('Field name was not provided.')
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.')
+        }
+
         const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, (qb: SelectQueryBuilder<T>): void => {
             const findParamValue: any = {};
             findParamValue[fieldName] = fieldValue;
@@ -311,8 +415,18 @@ abstract class DefaultService<T> {
         return qb.getOne();
     }
 
-    public async find(alias: string, parseQuery: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T> {
-        const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, parseQuery, serviceOptions, options);
+    public async find(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T> {
+        if (!alias) {
+            throw new Error('Alias was not provided.')
+        }
+        if (!queryParser) {
+            throw new Error('Query parser was not provided.')
+        }
+        if (!serviceOptions) {
+            throw new Error('Service options was not provided.')
+        }
+
+        const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, queryParser, serviceOptions, options);
 
         debug(qb.getSql());
 
@@ -352,20 +466,20 @@ abstract class DefaultService<T> {
         }
     }
 
-    private prepareQuery(alias: string, parseQuery: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): SelectQueryBuilder<T> {
+    private prepareQuery(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): SelectQueryBuilder<T> {
         const qb: SelectQueryBuilder<T> = this.getRepository().createQueryBuilder(alias);
 
         this.setJoins(alias, qb, serviceOptions);
 
-        parseQuery(qb);
+        queryParser(qb);
 
         this.setDefaultQuery(alias, qb, serviceOptions, options);
 
         return qb;
     }
 
-    private prepareListQuery(alias: string, parseQuery: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): SelectQueryBuilder<T> {
-        const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, parseQuery, serviceOptions, options);
+    private prepareListQuery(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): SelectQueryBuilder<T> {
+        const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, queryParser, serviceOptions, options);
 
         qb.orderBy(this.getSorting(alias, serviceOptions));
 
