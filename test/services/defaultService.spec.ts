@@ -356,13 +356,13 @@ describe('DefaultService', (): void => {
     });
 
     it('1. constructor', async (): Promise<void> => {
-        expect(() => {
+        expect((): void => {
             TestServiceFail.getInstance(undefined);
         }).to.throw('Repository type was not provided.');
     });
 
     it('2. constructor', async (): Promise<void> => {
-        expect(() => {
+        expect((): void => {
             TestService.getInstance(undefined);
         }).to.throw('Connection name was not provided');
     });
@@ -395,7 +395,7 @@ describe('DefaultService', (): void => {
     });
 
     it('6. translateParams', async (): Promise<void> => {
-        expect(testService.translateParams(undefined)).to.be.undefined;
+        expect(testService.translateParams(undefined)).to.be.eq('');
     });
 
     it('7. translateParams', async (): Promise<void> => {
@@ -431,7 +431,7 @@ describe('DefaultService', (): void => {
 
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
-        expect(() => {
+        expect((): void => {
             testService.setDefaultQuery(undefined, qb, {});
         }).to.throw('Alias was not provided.');
     });
@@ -439,7 +439,7 @@ describe('DefaultService', (): void => {
     it('15. setDefaultQuery', async (): Promise<void> => {
         const test: string = 'test';
 
-        expect(() => {
+        expect((): void => {
             testService.setDefaultQuery(test, undefined, {});
         }).to.throw('Query builder was not provided.');
     });
@@ -449,7 +449,7 @@ describe('DefaultService', (): void => {
 
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
-        expect(() => {
+        expect((): void => {
             testService.setDefaultQuery(test, qb, undefined);
         }).to.throw('Service options was not provided.');
     });
@@ -494,14 +494,14 @@ describe('DefaultService', (): void => {
     });
 
     it('19. getSorting', async (): Promise<void> => {
-        expect(() => {
-            testService.getSorting(undefined, {})
+        expect((): void => {
+            testService.getSorting(undefined, {});
         }).to.throw('Alias was not provided.');
     });
 
     it('20. getSorting', async (): Promise<void> => {
-        expect(() => {
-            testService.getSorting('test', undefined)
+        expect((): void => {
+            testService.getSorting('test', undefined);
         }).to.throw('Service options was not provided.');
     });
 
@@ -598,7 +598,7 @@ describe('DefaultService', (): void => {
 
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
-        expect(() => {
+        expect((): void => {
             testService.setJoins(undefined, qb, {});
         }).to.throw('Alias was not provided.');
     });
@@ -606,7 +606,7 @@ describe('DefaultService', (): void => {
     it('30. setJoins', async (): Promise<void> => {
         const test: string = 'test';
 
-        expect(() => {
+        expect((): void => {
             testService.setJoins(test, undefined, {});
         }).to.throw('Query builder was not provided.');
     });
@@ -616,7 +616,7 @@ describe('DefaultService', (): void => {
 
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
-        expect(() => {
+        expect((): void => {
             testService.setJoins(test, qb, undefined);
         }).to.throw('Service options was not provided.');
     });
@@ -1525,7 +1525,7 @@ describe('DefaultService', (): void => {
     });
 
     it('55. setPagination', async (): Promise<void> => {
-        expect(() => {
+        expect((): void => {
             testService.setPagination(undefined, {});
         }).to.throw('Query builder was not provided.');
     });
@@ -1535,7 +1535,7 @@ describe('DefaultService', (): void => {
 
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
-        expect(() => {
+        expect((): void => {
             testService.setPagination(qb, undefined);
         }).to.throw('Service options was not provided.');
     });
@@ -1586,9 +1586,11 @@ describe('DefaultService', (): void => {
     });
 
     it('59. list', async (): Promise<void> => {
-        let serviceError;
+        let serviceError: any;
         try {
-            await testService.list(undefined, (qb: SelectQueryBuilder<Test>): void => {}, {});
+            await testService.list(undefined, (qb: SelectQueryBuilder<Test>): void => {
+                //
+            }, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1601,7 +1603,7 @@ describe('DefaultService', (): void => {
     it('60. list', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.list(test, undefined, {});
         }
@@ -1616,9 +1618,11 @@ describe('DefaultService', (): void => {
     it('61. list', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
-            await testService.list(test, (qb: SelectQueryBuilder<Test>): void => {}, undefined);
+            await testService.list(test, (qb: SelectQueryBuilder<Test>): void => {
+                //
+            }, undefined);
         }
         catch (err: any) {
             serviceError = err;
@@ -1658,9 +1662,11 @@ describe('DefaultService', (): void => {
     });
 
     it('63. count', async (): Promise<void> => {
-        let serviceError;
+        let serviceError: any;
         try {
-            await testService.count(undefined, (qb: SelectQueryBuilder<Test>): void => {}, {});
+            await testService.count(undefined, (qb: SelectQueryBuilder<Test>): void => {
+                //
+            }, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1673,7 +1679,7 @@ describe('DefaultService', (): void => {
     it('64. count', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.count(test, undefined, {});
         }
@@ -1688,9 +1694,11 @@ describe('DefaultService', (): void => {
     it('65. count', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
-            await testService.count(test, (qb: SelectQueryBuilder<Test>): void => {}, undefined);
+            await testService.count(test, (qb: SelectQueryBuilder<Test>): void => {
+                //
+            }, undefined);
         }
         catch (err: any) {
             serviceError = err;
@@ -1730,9 +1738,11 @@ describe('DefaultService', (): void => {
     });
 
     it('67. listAndCount', async (): Promise<void> => {
-        let serviceError;
+        let serviceError: any;
         try {
-            await testService.listAndCount(undefined, (qb: SelectQueryBuilder<Test>): void => {}, {});
+            await testService.listAndCount(undefined, (qb: SelectQueryBuilder<Test>): void => {
+                //
+            }, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1745,7 +1755,7 @@ describe('DefaultService', (): void => {
     it('68. listAndCount', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.listAndCount(test, undefined, {});
         }
@@ -1760,9 +1770,11 @@ describe('DefaultService', (): void => {
     it('69. listAndCount', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
-            await testService.listAndCount(test, (qb: SelectQueryBuilder<Test>): void => {}, undefined);
+            await testService.listAndCount(test, (qb: SelectQueryBuilder<Test>): void => {
+                //
+            }, undefined);
         }
         catch (err: any) {
             serviceError = err;
@@ -1803,7 +1815,7 @@ describe('DefaultService', (): void => {
     });
 
     it('71. listBy', async (): Promise<void> => {
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.listBy(undefined, 'id', 1, {});
         }
@@ -1818,7 +1830,7 @@ describe('DefaultService', (): void => {
     it('72. listBy', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.listBy(test, undefined, 1, {});
         }
@@ -1833,7 +1845,7 @@ describe('DefaultService', (): void => {
     it('73. listBy', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.listBy(test, 'id', 1, undefined);
         }
@@ -1871,7 +1883,7 @@ describe('DefaultService', (): void => {
     });
 
     it('75. findById', async (): Promise<void> => {
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.findById(undefined, 1, {});
         }
@@ -1886,7 +1898,7 @@ describe('DefaultService', (): void => {
     it('76. findById', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.findById(test, undefined, {});
         }
@@ -1901,7 +1913,7 @@ describe('DefaultService', (): void => {
     it('77. findById', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.findById(test, 1, undefined);
         }
@@ -1938,7 +1950,7 @@ describe('DefaultService', (): void => {
     });
 
     it('79. findBy', async (): Promise<void> => {
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.findBy(undefined, 'id', 1, {});
         }
@@ -1953,7 +1965,7 @@ describe('DefaultService', (): void => {
     it('80. findBy', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.findBy(test, undefined, 1, {});
         }
@@ -1968,7 +1980,7 @@ describe('DefaultService', (): void => {
     it('81. findBy', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.findBy(test, 'id', 1, undefined);
         }
@@ -2005,9 +2017,11 @@ describe('DefaultService', (): void => {
     });
 
     it('83. find', async (): Promise<void> => {
-        let serviceError;
+        let serviceError: any;
         try {
-            await testService.find(undefined, (qb: SelectQueryBuilder<Test>): void => {}, {});
+            await testService.find(undefined, (qb: SelectQueryBuilder<Test>): void => {
+                //
+            }, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -2020,7 +2034,7 @@ describe('DefaultService', (): void => {
     it('84. find', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
             await testService.find(test, undefined, {});
         }
@@ -2035,9 +2049,11 @@ describe('DefaultService', (): void => {
     it('85. find', async (): Promise<void> => {
         const test: string = 'test';
 
-        let serviceError;
+        let serviceError: any;
         try {
-            await testService.find(test, (qb: SelectQueryBuilder<Test>): void => {}, undefined);
+            await testService.find(test, (qb: SelectQueryBuilder<Test>): void => {
+                //
+            }, undefined);
         }
         catch (err: any) {
             serviceError = err;
