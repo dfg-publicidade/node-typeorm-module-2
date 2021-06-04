@@ -1,3 +1,4 @@
+import Util from '@dfgpublicidade/node-util-module';
 import { config, expect } from 'chai';
 import { after, before, describe, it } from 'mocha';
 import { Connection, Entity, PrimaryGeneratedColumn } from 'typeorm';
@@ -119,7 +120,7 @@ describe('TypeOrmManager', (): void => {
         }
 
         expect(connectionError).to.exist;
-        expect(connectionError.message).to.contain('ER_ACCESS_DENIED_ERROR');
+        expect(connectionError.message).to.contain('Access denied for user');
     });
 
     it('6. getConnection', async (): Promise<void> => {
@@ -158,6 +159,8 @@ describe('TypeOrmManager', (): void => {
         TypeOrmManagerTest.wait({
             name: connectionName
         });
+
+        await Util.delay100ms();
 
         await TypeOrmManagerTest.close(connectionName);
 
