@@ -354,9 +354,7 @@ describe('DefaultService', (): void => {
                 pagination: {
                     limit: 20
                 }
-            },
-            connectionName: undefined,
-            db: undefined
+            }
         });
     });
 
