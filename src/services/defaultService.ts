@@ -66,11 +66,11 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             return param;
         }
         else {
-            let field: string = param.substring(0, param.indexOf('.'));
-            const compl: string = param.substring(param.indexOf('.') + 1);
+            const field: string = param.substring(0, param.indexOf('.'));
+            let compl: string = param.substring(param.indexOf('.') + 1);
 
-            if (field === 'id') {
-                field = '_id';
+            if (compl === 'id') {
+                compl = '_id';
             }
 
             alias = alias ? alias : field;
