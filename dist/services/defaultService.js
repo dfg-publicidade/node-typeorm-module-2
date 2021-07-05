@@ -49,8 +49,11 @@ class DefaultService extends serviceUtil_1.default {
             return param;
         }
         else {
-            const field = param.substring(0, param.indexOf('.'));
+            let field = param.substring(0, param.indexOf('.'));
             const compl = param.substring(param.indexOf('.') + 1);
+            if (field === 'id') {
+                field = '_id';
+            }
             alias = alias ? alias : field;
             if (compl.indexOf('.') !== -1) {
                 const subfield = compl.substring(0, compl.indexOf('.'));
