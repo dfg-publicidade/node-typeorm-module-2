@@ -414,11 +414,11 @@ describe('DefaultService', (): void => {
     });
 
     it('8. translateParams', async (): Promise<void> => {
-        expect(testService2.translateParams('test2.id')).to.be.eq('test2.id');
+        expect(testService2.translateParams('test2.id')).to.be.eq('test2._id');
     });
 
     it('9. translateParams', async (): Promise<void> => {
-        expect(testService2.translateParams('test2.test.id')).to.be.eq('test2Test.id');
+        expect(testService2.translateParams('test2.test.id')).to.be.eq('test2Test._id');
     });
 
     it('10. translateParams', async (): Promise<void> => {
@@ -430,7 +430,7 @@ describe('DefaultService', (): void => {
     });
 
     it('12. translateParams', async (): Promise<void> => {
-        expect(testService.translateParams('test.tests.id')).to.be.eq('testTest2.id');
+        expect(testService.translateParams('test.tests.id')).to.be.eq('testTest2._id');
     });
 
     it('13. translateParams', async (): Promise<void> => {
