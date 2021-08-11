@@ -1,5 +1,4 @@
 import { Service as ParamService } from '@dfgpublicidade/node-params-module';
-import appDebugger from 'debug';
 import { EntityManager, ObjectType, Repository, SelectQueryBuilder } from 'typeorm';
 import ChildEntity from '../interfaces/childEntity';
 import ParentEntity from '../interfaces/parentEntity';
@@ -11,7 +10,7 @@ declare abstract class DefaultService<T> extends ServiceUtil implements ParamSer
     createdAtField: string;
     updatedAtField: string;
     deletedAtField: string;
-    debug: appDebugger.IDebugger;
+    debug: any;
     protected defaultSorting: any;
     protected parentEntities: ParentEntity[];
     protected childEntities: ChildEntity[];

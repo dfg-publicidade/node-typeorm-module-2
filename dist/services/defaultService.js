@@ -34,7 +34,7 @@ class DefaultService extends serviceUtil_1.default {
             ? connection.getRepository(this.repositoryType)
             : undefined;
         if (!connection || !connection.isConnected || !repository) {
-            debug('Connection or repository not found');
+            this.debug('Connection or repository not found');
             throw new Error('Connection or repository not found');
         }
         else {
@@ -107,7 +107,8 @@ class DefaultService extends serviceUtil_1.default {
                 subitems: parent.subitems,
                 ignore: serviceOptions.ignore,
                 only: parent.only,
-                andWhere: serviceOptions.andWhere
+                andWhere: serviceOptions.andWhere,
+                joinType: parentJoinType
             });
             if (parent.dependent && (parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect')) {
                 parentService.setDefaultQuery(alias + parent.alias, qb, serviceOptions);
@@ -216,7 +217,7 @@ class DefaultService extends serviceUtil_1.default {
             throw new Error('Service options was not provided.');
         }
         const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
-        debug(qb.getSql());
+        this.debug(qb.getSql());
         return qb.getMany();
     }
     async count(alias, queryParser, serviceOptions, options) {
@@ -230,7 +231,7 @@ class DefaultService extends serviceUtil_1.default {
             throw new Error('Service options was not provided.');
         }
         const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
-        debug(qb.getSql());
+        this.debug(qb.getSql());
         return qb.getCount();
     }
     async listAndCount(alias, queryParser, serviceOptions, options) {
@@ -244,7 +245,7 @@ class DefaultService extends serviceUtil_1.default {
             throw new Error('Service options was not provided.');
         }
         const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
-        debug(qb.getSql());
+        this.debug(qb.getSql());
         return qb.getManyAndCount();
     }
     async listBy(alias, fieldName, fieldValue, serviceOptions, options) {
@@ -262,7 +263,7 @@ class DefaultService extends serviceUtil_1.default {
             findParamValue[fieldName] = fieldValue;
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
         }, serviceOptions, options);
-        debug(qb.getSql());
+        this.debug(qb.getSql());
         return qb.getMany();
     }
     async findById(alias, id, serviceOptions, options) {
@@ -280,7 +281,7 @@ class DefaultService extends serviceUtil_1.default {
                 id
             });
         }, serviceOptions, options);
-        debug(qb.getSql());
+        this.debug(qb.getSql());
         return qb.getOne();
     }
     async findBy(alias, fieldName, fieldValue, serviceOptions, options) {
@@ -298,7 +299,7 @@ class DefaultService extends serviceUtil_1.default {
             findParamValue[fieldName] = fieldValue;
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
         }, serviceOptions, options);
-        debug(qb.getSql());
+        this.debug(qb.getSql());
         return qb.getOne();
     }
     async find(alias, queryParser, serviceOptions, options) {
@@ -312,7 +313,7 @@ class DefaultService extends serviceUtil_1.default {
             throw new Error('Service options was not provided.');
         }
         const qb = this.prepareQuery(alias, queryParser, serviceOptions, options);
-        debug(qb.getSql());
+        this.debug(qb.getSql());
         return qb.getOne();
     }
     async save(entity, transactionEntityManager) {

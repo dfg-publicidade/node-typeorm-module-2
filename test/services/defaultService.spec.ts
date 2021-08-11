@@ -1647,7 +1647,7 @@ describe('DefaultService', (): void => {
         const test: string = 'test';
 
         let sql: string;
-        testService.debug.log = (data: string): void => {
+        testService.debug = (data: string): void => {
             sql = data;
         };
 
@@ -1723,7 +1723,7 @@ describe('DefaultService', (): void => {
         const test: string = 'test';
 
         let sql: string;
-        testService.debug.log = (data: string): void => {
+        testService.debug = (data: string): void => {
             sql = data;
         };
 
@@ -1799,7 +1799,7 @@ describe('DefaultService', (): void => {
         const test: string = 'test';
 
         let sql: string;
-        testService.debug.log = (data: string): void => {
+        testService.debug = (data: string): void => {
             sql = data;
         };
 
@@ -1872,7 +1872,7 @@ describe('DefaultService', (): void => {
         const test: string = 'test';
 
         let sql: string;
-        testService.debug.log = (data: string): void => {
+        testService.debug = (data: string): void => {
             sql = data;
         };
 
@@ -1940,7 +1940,7 @@ describe('DefaultService', (): void => {
         const test: string = 'test';
 
         let sql: string;
-        testService.debug.log = (data: string): void => {
+        testService.debug = (data: string): void => {
             sql = data;
         };
 
@@ -2007,7 +2007,7 @@ describe('DefaultService', (): void => {
         const test: string = 'test';
 
         let sql: string;
-        testService.debug.log = (data: string): void => {
+        testService.debug = (data: string): void => {
             sql = data;
         };
 
@@ -2078,7 +2078,7 @@ describe('DefaultService', (): void => {
         const test: string = 'test';
 
         let sql: string;
-        testService.debug.log = (data: string): void => {
+        testService.debug = (data: string): void => {
             sql = data;
         };
 

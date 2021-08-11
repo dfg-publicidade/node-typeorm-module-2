@@ -18,7 +18,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
     public createdAtField: string = 'createdAt';
     public updatedAtField: string = 'updatedAt';
     public deletedAtField: string = 'deletedAt';
-    public debug: appDebugger.IDebugger;
+    public debug: any;
 
     protected defaultSorting: any = {};
 
@@ -50,7 +50,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             : undefined;
 
         if (!connection || !connection.isConnected || !repository) {
-            debug('Connection or repository not found');
+            this.debug('Connection or repository not found');
             throw new Error('Connection or repository not found');
         }
         else {
@@ -152,7 +152,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
                 subitems: parent.subitems,
                 ignore: serviceOptions.ignore,
                 only: parent.only,
-                andWhere: serviceOptions.andWhere
+                andWhere: serviceOptions.andWhere,
+                joinType: parentJoinType
             });
 
             if (parent.dependent && (parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect')) {
@@ -310,7 +311,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
 
-        debug(qb.getSql());
+        this.debug(qb.getSql());
 
         return qb.getMany();
     }
@@ -328,7 +329,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
 
-        debug(qb.getSql());
+        this.debug(qb.getSql());
 
         return qb.getCount();
     }
@@ -346,7 +347,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
 
-        debug(qb.getSql());
+        this.debug(qb.getSql());
 
         return qb.getManyAndCount();
     }
@@ -369,7 +370,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
         }, serviceOptions, options);
 
-        debug(qb.getSql());
+        this.debug(qb.getSql());
 
         return qb.getMany();
     }
@@ -391,7 +392,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             });
         }, serviceOptions, options);
 
-        debug(qb.getSql());
+        this.debug(qb.getSql());
 
         return qb.getOne();
     }
@@ -414,7 +415,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
         }, serviceOptions, options);
 
-        debug(qb.getSql());
+        this.debug(qb.getSql());
 
         return qb.getOne();
     }
@@ -432,7 +433,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, queryParser, serviceOptions, options);
 
-        debug(qb.getSql());
+        this.debug(qb.getSql());
 
         return qb.getOne();
     }
