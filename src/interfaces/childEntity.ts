@@ -12,11 +12,6 @@ interface ChildEntity {
      * alunos, trabalhos, usuarios
      */
     name: string;
-    /** 
-     * Nome de junção no singular
-     * aluno, trabalho, usuario
-     */
-    singlName: string;
     /**
      * Alias da junção (alias que será utilizado na montagem da consulta)
      * Aluno, Trabalho, Usuario
