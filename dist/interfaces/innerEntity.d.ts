@@ -10,7 +10,7 @@ interface InnerEntity {
      * Alias da subentidade (alias que será utilizado na montagem da consulta)
      * <vazio>, endereco, telefone
      */
-    alias: string;
+    alias?: string;
     /**
      * Entidades pai relacionadas a subentidade
      */
