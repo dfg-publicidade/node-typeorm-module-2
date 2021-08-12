@@ -87,7 +87,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
                 for (const inner of this.innerEntities) {
                     if (inner.name === subfield) {
-                        const innerService: DefaultService<T> = this.classObj.getInstance(this.connectionName);
+                        const innerService: DefaultService<T> = new this.classObj(this.connectionName);
                         innerService.parentEntities = inner.parentEntities || [];
                         innerService.childEntities = inner.childEntities || [];
 
@@ -107,7 +107,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
                 for (const child of this.childEntities) {
                     if (child.name === subfield) {
-                        const result: string = child.service.getInstance(this.connectionName).translateParams(compl, child.alias);
+                        const result: string = child.service.getInstance(this.connectionName).translateParams(compl.replace(child.name, child.singlName), child.alias);
 
                         return result ? alias + result : undefined;
                     }

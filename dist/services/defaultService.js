@@ -64,7 +64,7 @@ class DefaultService extends serviceUtil_1.default {
                 const subfield = compl.substring(0, compl.indexOf('.'));
                 for (const inner of this.innerEntities) {
                     if (inner.name === subfield) {
-                        const innerService = this.classObj.getInstance(this.connectionName);
+                        const innerService = new this.classObj(this.connectionName);
                         innerService.parentEntities = inner.parentEntities || [];
                         innerService.childEntities = inner.childEntities || [];
                         const result = innerService.translateParams(compl, inner.alias);
@@ -79,7 +79,7 @@ class DefaultService extends serviceUtil_1.default {
                 }
                 for (const child of this.childEntities) {
                     if (child.name === subfield) {
-                        const result = child.service.getInstance(this.connectionName).translateParams(compl, child.alias);
+                        const result = child.service.getInstance(this.connectionName).translateParams(compl.replace(child.name, child.singlName), child.alias);
                         return result ? alias + result : undefined;
                     }
                 }
