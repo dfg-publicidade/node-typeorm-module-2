@@ -16,11 +16,11 @@ interface InnerEntity {
     /** 
      * Entidades pai relacionadas a subentidade
      */
-    parentEntities: ParentEntity[];
+    parentEntities?: ParentEntity[];
     /** 
      * Entidades filho relacionadas a subentdidade
      */
-    childEntities: ChildEntity[];
+    childEntities?: ChildEntity[];
 }
 
 export default InnerEntity;
