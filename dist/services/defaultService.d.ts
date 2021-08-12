@@ -1,6 +1,7 @@
 import { Service as ParamService } from '@dfgpublicidade/node-params-module';
 import { EntityManager, ObjectType, Repository, SelectQueryBuilder } from 'typeorm';
 import ChildEntity from '../interfaces/childEntity';
+import InnerEntity from '../interfaces/innerEntity';
 import ParentEntity from '../interfaces/parentEntity';
 import ServiceOptions from '../interfaces/serviceOptions';
 import ServiceUtil from '../util/serviceUtil';
@@ -12,11 +13,13 @@ declare abstract class DefaultService<T> extends ServiceUtil implements ParamSer
     deletedAtField: string;
     debug: any;
     protected defaultSorting: any;
+    protected innerEntities: InnerEntity[];
     protected parentEntities: ParentEntity[];
     protected childEntities: ChildEntity[];
     protected connectionName: string;
+    protected classObj: any;
     private repositoryType;
-    protected constructor(repositoryType: ObjectType<T>, connectionName: string);
+    protected constructor(repositoryType: ObjectType<T>, classObj: any, connectionName: string);
     getRepository(): Repository<T>;
     translateParams(param: string, alias?: string): string;
     setJoins(alias: string, qb: SelectQueryBuilder<T>, serviceOptions: ServiceOptions<Subitem>): void;

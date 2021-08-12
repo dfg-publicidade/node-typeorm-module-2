@@ -4,6 +4,7 @@ import { Connection, EntityManager, ObjectType, Repository, SelectQueryBuilder }
 import TypeOrmManager from '../datasources/typeOrmManager';
 import JoinType from '../enums/joinType';
 import ChildEntity from '../interfaces/childEntity';
+import InnerEntity from '../interfaces/innerEntity';
 import ParentEntity from '../interfaces/parentEntity';
 import ServiceOptions from '../interfaces/serviceOptions';
 import ServiceUtil from '../util/serviceUtil';
@@ -22,23 +23,29 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
     protected defaultSorting: any = {};
 
+    protected innerEntities: InnerEntity[] = [];
     protected parentEntities: ParentEntity[] = [];
     protected childEntities: ChildEntity[] = [];
 
     protected connectionName: string;
+    protected classObj: any;
     private repositoryType: ObjectType<T>;
 
-    protected constructor(repositoryType: ObjectType<T>, connectionName: string) {
+    protected constructor(repositoryType: ObjectType<T>, classObj: any, connectionName: string) {
         super();
 
         if (!repositoryType) {
             throw new Error('Repository type was not provided.');
+        }
+        if (!classObj) {
+            throw new Error('Repository class was not provided.');
         }
         if (!connectionName) {
             throw new Error('Connection name was not provided.');
         }
 
         this.repositoryType = repositoryType;
+        this.classObj = classObj;
         this.connectionName = connectionName;
         this.debug = debug;
     }
@@ -77,6 +84,18 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
             if (compl.indexOf('.') !== -1) {
                 const subfield: string = compl.substring(0, compl.indexOf('.'));
+
+                for (const inner of this.innerEntities) {
+                    if (inner.name === subfield) {
+                        const innerService: DefaultService<T> = this.classObj.getInstance(this.connectionName);
+                        innerService.parentEntities = inner.parentEntities || [];
+                        innerService.childEntities = inner.childEntities || [];
+
+                        const result: string = innerService.translateParams(compl, inner.alias);
+
+                        return result ? `${alias}.${result}` : undefined;
+                    }
+                }
 
                 for (const parent of this.parentEntities) {
                     if (parent.name === subfield) {

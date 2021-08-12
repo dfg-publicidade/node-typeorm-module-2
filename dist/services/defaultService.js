@@ -9,22 +9,27 @@ const serviceUtil_1 = __importDefault(require("../util/serviceUtil"));
 /* Module */
 const debug = debug_1.default('sql:typeorm-default-service');
 class DefaultService extends serviceUtil_1.default {
-    constructor(repositoryType, connectionName) {
+    constructor(repositoryType, classObj, connectionName) {
         super();
         this.idField = 'id';
         this.createdAtField = 'createdAt';
         this.updatedAtField = 'updatedAt';
         this.deletedAtField = 'deletedAt';
         this.defaultSorting = {};
+        this.innerEntities = [];
         this.parentEntities = [];
         this.childEntities = [];
         if (!repositoryType) {
             throw new Error('Repository type was not provided.');
         }
+        if (!classObj) {
+            throw new Error('Repository class was not provided.');
+        }
         if (!connectionName) {
             throw new Error('Connection name was not provided.');
         }
         this.repositoryType = repositoryType;
+        this.classObj = classObj;
         this.connectionName = connectionName;
         this.debug = debug;
     }
@@ -57,6 +62,15 @@ class DefaultService extends serviceUtil_1.default {
             alias = alias ? alias : field;
             if (compl.indexOf('.') !== -1) {
                 const subfield = compl.substring(0, compl.indexOf('.'));
+                for (const inner of this.innerEntities) {
+                    if (inner.name === subfield) {
+                        const innerService = this.classObj.getInstance(this.connectionName);
+                        innerService.parentEntities = inner.parentEntities || [];
+                        innerService.childEntities = inner.childEntities || [];
+                        const result = innerService.translateParams(compl, inner.alias);
+                        return result ? `${alias}.${result}` : undefined;
+                    }
+                }
                 for (const parent of this.parentEntities) {
                     if (parent.name === subfield) {
                         const result = parent.service.getInstance(this.connectionName).translateParams(compl, parent.alias);
