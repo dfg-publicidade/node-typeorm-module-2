@@ -65,8 +65,8 @@ class DefaultService extends serviceUtil_1.default {
                 for (const inner of this.innerEntities) {
                     if (inner.name === subfield) {
                         const innerService = new this.classObj(this.connectionName);
-                        innerService.parentEntities = inner.parentEntities || [];
-                        innerService.childEntities = inner.childEntities || [];
+                        innerService.parentEntities = inner.parentEntities;
+                        innerService.childEntities = inner.childEntities;
                         const result = innerService.translateParams(compl, inner.alias);
                         return result ? `${alias}.${result}` : undefined;
                     }
