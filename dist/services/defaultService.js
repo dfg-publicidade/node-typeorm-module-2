@@ -90,7 +90,7 @@ class DefaultService extends serviceUtil_1.default {
             }
         }
     }
-    setJoins(alias, qb, serviceOptions) {
+    setJoins(alias, qb, serviceOptions, options) {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -100,7 +100,7 @@ class DefaultService extends serviceUtil_1.default {
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
         }
-        DefaultService.forParents(alias, this.parentEntities, (alias, parent, serviceOptions) => {
+        DefaultService.forParents(alias, this.parentEntities, (alias, parent, serviceOptions, options) => {
             const parentService = parent.service.getInstance(this.connectionName);
             let parentJoinType = parent.joinType ? parent.joinType : 'innerJoinAndSelect';
             if ((parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect') && serviceOptions.joinType) {
@@ -109,7 +109,7 @@ class DefaultService extends serviceUtil_1.default {
             const [andWhereParam, andWhereParamValue] = DefaultService.parseAndWhere(alias, parent.name, serviceOptions.andWhere);
             const parentQb = parentService.getRepository().createQueryBuilder(alias + parent.alias);
             if (!parent.dependent && (parentJoinType === 'leftJoin' || parentJoinType === 'leftJoinAndSelect')) {
-                parentService.setDefaultQuery(alias + parent.alias, parentQb, serviceOptions);
+                parentService.setDefaultQuery(alias + parent.alias, parentQb, serviceOptions, options);
             }
             if (andWhereParam) {
                 parentQb.andWhere(andWhereParam);
@@ -125,10 +125,10 @@ class DefaultService extends serviceUtil_1.default {
                 joinType: parentJoinType
             });
             if (parent.dependent && (parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect')) {
-                parentService.setDefaultQuery(alias + parent.alias, qb, serviceOptions);
+                parentService.setDefaultQuery(alias + parent.alias, qb, serviceOptions, options);
             }
-        }, serviceOptions);
-        DefaultService.forChilds(alias, this.childEntities, (alias, child, serviceOptions) => {
+        }, serviceOptions, options);
+        DefaultService.forChilds(alias, this.childEntities, (alias, child, serviceOptions, options) => {
             const childService = child.service.getInstance(this.connectionName);
             let childJoinType = child.joinType ? child.joinType : 'leftJoinAndSelect';
             if ((childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect') && serviceOptions.joinType) {
@@ -136,7 +136,7 @@ class DefaultService extends serviceUtil_1.default {
             }
             const childQb = childService.getRepository().createQueryBuilder(alias + child.alias);
             if (!child.dependent && (childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect')) {
-                childService.setDefaultQuery(alias + child.alias, childQb, serviceOptions);
+                childService.setDefaultQuery(alias + child.alias, childQb, serviceOptions, options);
             }
             if (child.andWhere) {
                 childQb.andWhere(child.andWhere);
@@ -154,11 +154,11 @@ class DefaultService extends serviceUtil_1.default {
                 ignore: serviceOptions.ignore ? serviceOptions.ignore : undefined,
                 only: child.only,
                 andWhere: serviceOptions.andWhere
-            });
+            }, options);
             if (child.dependent && (childJoinType === 'innerJoin' || childJoinType === 'innerJoinAndSelect')) {
-                childService.setDefaultQuery(alias + child.alias, qb, serviceOptions);
+                childService.setDefaultQuery(alias + child.alias, qb, serviceOptions, options);
             }
-        }, serviceOptions);
+        }, serviceOptions, options);
     }
     setDefaultQuery(alias, qb, serviceOptions, options) {
         if (!alias) {
@@ -174,7 +174,7 @@ class DefaultService extends serviceUtil_1.default {
             qb.andWhere(`${alias}.${this.deletedAtField} IS NULL`);
         }
     }
-    getSorting(alias, serviceOptions) {
+    getSorting(alias, serviceOptions, options) {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -197,7 +197,7 @@ class DefaultService extends serviceUtil_1.default {
                     ignore: serviceOptions.ignore,
                     only: child.only
                 }));
-            }, serviceOptions);
+            }, serviceOptions, options);
         }
         else {
             const parsedSort = {};
@@ -360,14 +360,14 @@ class DefaultService extends serviceUtil_1.default {
     }
     prepareQuery(alias, queryParser, serviceOptions, options) {
         const qb = this.getRepository().createQueryBuilder(alias);
-        this.setJoins(alias, qb, serviceOptions);
+        this.setJoins(alias, qb, serviceOptions, options);
         queryParser(qb);
         this.setDefaultQuery(alias, qb, serviceOptions, options);
         return qb;
     }
     prepareListQuery(alias, queryParser, serviceOptions, options) {
         const qb = this.prepareQuery(alias, queryParser, serviceOptions, options);
-        qb.orderBy(this.getSorting(alias, serviceOptions));
+        qb.orderBy(this.getSorting(alias, serviceOptions, options));
         this.setPagination(qb, serviceOptions);
         return qb;
     }

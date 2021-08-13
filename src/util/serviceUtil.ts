@@ -12,9 +12,11 @@ abstract class ServiceUtil {
         action: (
             alias: string,
             parent: ParentEntity,
-            serviceOptions: ServiceOptions<any>
+            serviceOptions: ServiceOptions<any>,
+            options: any
         ) => void,
-        serviceOptions: ServiceOptions<any>
+        serviceOptions: ServiceOptions<any>,
+        options: any
     ): void {
         for (const parent of parentEntities) {
             if (this.isNotOnly(serviceOptions, parent.name)) {
@@ -25,7 +27,7 @@ abstract class ServiceUtil {
             }
 
             if (this.isNotOrigin(serviceOptions, parent)) {
-                action(alias, parent, serviceOptions);
+                action(alias, parent, serviceOptions, options);
             }
         }
     }
@@ -36,9 +38,11 @@ abstract class ServiceUtil {
         action: (
             alias: string,
             child: ChildEntity,
-            serviceOptions: ServiceOptions<any>
+            serviceOptions: ServiceOptions<any>,
+            options: any
         ) => void,
-        serviceOptions: ServiceOptions<any>
+        serviceOptions: ServiceOptions<any>,
+        options: any
     ): void {
         if (serviceOptions && serviceOptions.subitems) {
             for (const subitem of serviceOptions.subitems) {
@@ -50,7 +54,7 @@ abstract class ServiceUtil {
                         continue;
                     }
                     if (child.name === subitem) {
-                        action(alias, child, serviceOptions);
+                        action(alias, child, serviceOptions, options);
                     }
                 }
             }

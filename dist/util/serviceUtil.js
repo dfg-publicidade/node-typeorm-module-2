@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const node_strings_module_1 = __importDefault(require("@dfgpublicidade/node-strings-module"));
 /* Module */
 class ServiceUtil {
-    static forParents(alias, parentEntities, action, serviceOptions) {
+    static forParents(alias, parentEntities, action, serviceOptions, options) {
         for (const parent of parentEntities) {
             if (this.isNotOnly(serviceOptions, parent.name)) {
                 break;
@@ -15,11 +15,11 @@ class ServiceUtil {
                 continue;
             }
             if (this.isNotOrigin(serviceOptions, parent)) {
-                action(alias, parent, serviceOptions);
+                action(alias, parent, serviceOptions, options);
             }
         }
     }
-    static forChilds(alias, childEntities, action, serviceOptions) {
+    static forChilds(alias, childEntities, action, serviceOptions, options) {
         if (serviceOptions && serviceOptions.subitems) {
             for (const subitem of serviceOptions.subitems) {
                 for (const child of childEntities) {
@@ -30,7 +30,7 @@ class ServiceUtil {
                         continue;
                     }
                     if (child.name === subitem) {
-                        action(alias, child, serviceOptions);
+                        action(alias, child, serviceOptions, options);
                     }
                 }
             }

@@ -121,7 +121,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         }
     }
 
-    public setJoins(alias: string, qb: SelectQueryBuilder<T>, serviceOptions: ServiceOptions<Subitem>): void {
+    public setJoins(alias: string, qb: SelectQueryBuilder<T>, serviceOptions: ServiceOptions<Subitem>, options: any): void {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -135,7 +135,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         DefaultService.forParents(alias, this.parentEntities, (
             alias: string,
             parent: ParentEntity,
-            serviceOptions: ServiceOptions<Subitem>
+            serviceOptions: ServiceOptions<Subitem>,
+            options: any
         ): void => {
             const parentService: DefaultService<any> = parent.service.getInstance(this.connectionName);
 
@@ -150,7 +151,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             const parentQb: SelectQueryBuilder<any> = parentService.getRepository().createQueryBuilder(alias + parent.alias);
 
             if (!parent.dependent && (parentJoinType === 'leftJoin' || parentJoinType === 'leftJoinAndSelect')) {
-                parentService.setDefaultQuery(alias + parent.alias, parentQb, serviceOptions);
+                parentService.setDefaultQuery(alias + parent.alias, parentQb, serviceOptions, options);
             }
 
             if (andWhereParam) {
@@ -176,14 +177,15 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             });
 
             if (parent.dependent && (parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect')) {
-                parentService.setDefaultQuery(alias + parent.alias, qb, serviceOptions);
+                parentService.setDefaultQuery(alias + parent.alias, qb, serviceOptions, options);
             }
-        }, serviceOptions);
+        }, serviceOptions, options);
 
         DefaultService.forChilds(alias, this.childEntities, (
             alias: string,
             child: ChildEntity,
-            serviceOptions: ServiceOptions<Subitem>
+            serviceOptions: ServiceOptions<Subitem>,
+            options: any
         ): void => {
             const childService: DefaultService<any> = child.service.getInstance(this.connectionName);
 
@@ -196,7 +198,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             const childQb: SelectQueryBuilder<any> = childService.getRepository().createQueryBuilder(alias + child.alias);
 
             if (!child.dependent && (childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect')) {
-                childService.setDefaultQuery(alias + child.alias, childQb, serviceOptions);
+                childService.setDefaultQuery(alias + child.alias, childQb, serviceOptions, options);
             }
 
             if (child.andWhere) {
@@ -225,15 +227,15 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
                 ignore: serviceOptions.ignore ? serviceOptions.ignore : undefined,
                 only: child.only,
                 andWhere: serviceOptions.andWhere
-            });
+            }, options);
 
             if (child.dependent && (childJoinType === 'innerJoin' || childJoinType === 'innerJoinAndSelect')) {
-                childService.setDefaultQuery(alias + child.alias, qb, serviceOptions);
+                childService.setDefaultQuery(alias + child.alias, qb, serviceOptions, options);
             }
-        }, serviceOptions);
+        }, serviceOptions, options);
     }
 
-    public setDefaultQuery(alias: string, qb: any, serviceOptions: ServiceOptions<Subitem>, options?: any): void {
+    public setDefaultQuery(alias: string, qb: any, serviceOptions: ServiceOptions<Subitem>, options: any): void {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -249,7 +251,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         }
     }
 
-    public getSorting(alias: string, serviceOptions: ServiceOptions<Subitem>): any {
+    public getSorting(alias: string, serviceOptions: ServiceOptions<Subitem>, options: any): any {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -288,7 +290,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
                     })
                 };
 
-            }, serviceOptions);
+            }, serviceOptions, options);
         }
         else {
             const parsedSort: any = {};
@@ -317,7 +319,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         }
     }
 
-    public async list(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T[]> {
+    public async list(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<T[]> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -335,7 +337,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         return qb.getMany();
     }
 
-    public async count(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<number> {
+    public async count(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<number> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -353,7 +355,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         return qb.getCount();
     }
 
-    public async listAndCount(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<[T[], number]> {
+    public async listAndCount(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<[T[], number]> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -371,7 +373,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         return qb.getManyAndCount();
     }
 
-    public async listBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T[]> {
+    public async listBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<T[]> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -394,7 +396,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         return qb.getMany();
     }
 
-    public async findById(alias: string, id: number, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T> {
+    public async findById(alias: string, id: number, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<T> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -416,7 +418,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         return qb.getOne();
     }
 
-    public async findBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T> {
+    public async findBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<T> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -439,7 +441,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         return qb.getOne();
     }
 
-    public async find(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options?: any): Promise<T> {
+    public async find(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<T> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -493,7 +495,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
     private prepareQuery(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): SelectQueryBuilder<T> {
         const qb: SelectQueryBuilder<T> = this.getRepository().createQueryBuilder(alias);
 
-        this.setJoins(alias, qb, serviceOptions);
+        this.setJoins(alias, qb, serviceOptions, options);
 
         queryParser(qb);
 
@@ -505,7 +507,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
     private prepareListQuery(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): SelectQueryBuilder<T> {
         const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, queryParser, serviceOptions, options);
 
-        qb.orderBy(this.getSorting(alias, serviceOptions));
+        qb.orderBy(this.getSorting(alias, serviceOptions, options));
 
         this.setPagination(qb, serviceOptions);
 
