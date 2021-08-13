@@ -123,7 +123,7 @@ class DefaultService extends serviceUtil_1.default {
                 only: parent.only,
                 andWhere: serviceOptions.andWhere,
                 joinType: parentJoinType
-            });
+            }, options);
             if (parent.dependent && (parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect')) {
                 parentService.setDefaultQuery(alias + parent.alias, qb, serviceOptions, options);
             }

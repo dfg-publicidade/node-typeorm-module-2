@@ -174,7 +174,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
                 only: parent.only,
                 andWhere: serviceOptions.andWhere,
                 joinType: parentJoinType
-            });
+            }, options);
 
             if (parent.dependent && (parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect')) {
                 parentService.setDefaultQuery(alias + parent.alias, qb, serviceOptions, options);
