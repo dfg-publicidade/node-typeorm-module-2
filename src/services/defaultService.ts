@@ -143,9 +143,10 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             let parentJoinType: JoinType = parent.joinType ? parent.joinType : 'innerJoinAndSelect';
 
             if ((parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect') && serviceOptions.joinType) {
-                parentJoinType = parentJoinType === 'innerJoin' && serviceOptions.joinType === 'leftJoinAndSelect'
-                    ? parentJoinType = 'leftJoin'
-                    : serviceOptions.joinType;
+                parentJoinType = serviceOptions.joinType;
+            }
+            else if (parentJoinType === 'leftJoinAndSelect' && serviceOptions.joinType === 'innerJoin') {
+                parentJoinType = 'leftJoin';
             }
 
             const [andWhereParam, andWhereParamValue]: [string, any] = DefaultService.parseAndWhere(alias, parent.name, serviceOptions.andWhere);
