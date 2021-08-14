@@ -106,7 +106,7 @@ class DefaultService extends serviceUtil_1.default {
             if ((parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect') && serviceOptions.joinType) {
                 parentJoinType = serviceOptions.joinType;
             }
-            else if (parentJoinType === 'leftJoinAndSelect' && serviceOptions.joinType === 'innerJoin') {
+            if (parentJoinType === 'leftJoinAndSelect' && serviceOptions.joinType === 'innerJoin') {
                 parentJoinType = 'leftJoin';
             }
             const [andWhereParam, andWhereParamValue] = DefaultService.parseAndWhere(alias, parent.name, serviceOptions.andWhere);

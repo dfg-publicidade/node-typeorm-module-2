@@ -145,7 +145,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             if ((parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect') && serviceOptions.joinType) {
                 parentJoinType = serviceOptions.joinType;
             }
-            else if (parentJoinType === 'leftJoinAndSelect' && serviceOptions.joinType === 'innerJoin') {
+
+            if (parentJoinType === 'leftJoinAndSelect' && serviceOptions.joinType === 'innerJoin') {
                 parentJoinType = 'leftJoin';
             }
 
