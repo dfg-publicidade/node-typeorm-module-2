@@ -142,11 +142,16 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
             let parentJoinType: JoinType = parent.joinType ? parent.joinType : 'innerJoinAndSelect';
 
+            let noSelect: boolean = false;
+            if (parentJoinType.indexOf('AndSelect') === -1 || serviceOptions?.joinType?.indexOf('AndSelect') === -1) {
+                noSelect = true;
+            }
+
             if ((parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect') && serviceOptions.joinType) {
                 parentJoinType = serviceOptions.joinType;
             }
 
-            if (parentJoinType.indexOf('AndSelect') === -1 || serviceOptions?.joinType?.indexOf('AndSelect') === -1) {
+            if (noSelect) {
                 parentJoinType = parentJoinType.replace('AndSelect', '') as any;
             }
 
