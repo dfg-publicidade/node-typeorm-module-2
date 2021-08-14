@@ -101,13 +101,14 @@ class DefaultService extends serviceUtil_1.default {
             throw new Error('Service options was not provided.');
         }
         DefaultService.forParents(alias, this.parentEntities, (alias, parent, serviceOptions, options) => {
+            var _a;
             const parentService = parent.service.getInstance(this.connectionName);
             let parentJoinType = parent.joinType ? parent.joinType : 'innerJoinAndSelect';
             if ((parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect') && serviceOptions.joinType) {
                 parentJoinType = serviceOptions.joinType;
             }
-            if (parentJoinType === 'leftJoinAndSelect' && serviceOptions.joinType === 'innerJoin') {
-                parentJoinType = 'leftJoin';
+            if (parentJoinType.indexOf('AndSelect') === -1 || ((_a = serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.joinType) === null || _a === void 0 ? void 0 : _a.indexOf('AndSelect')) === -1) {
+                parentJoinType = parentJoinType.replace('AndSelect', '');
             }
             const [andWhereParam, andWhereParamValue] = DefaultService.parseAndWhere(alias, parent.name, serviceOptions.andWhere);
             const parentQb = parentService.getRepository().createQueryBuilder(alias + parent.alias);
