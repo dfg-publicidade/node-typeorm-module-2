@@ -104,7 +104,9 @@ class DefaultService extends serviceUtil_1.default {
             const parentService = parent.service.getInstance(this.connectionName);
             let parentJoinType = parent.joinType ? parent.joinType : 'innerJoinAndSelect';
             if ((parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect') && serviceOptions.joinType) {
-                parentJoinType = serviceOptions.joinType;
+                parentJoinType = parentJoinType === 'innerJoin' && serviceOptions.joinType === 'leftJoinAndSelect'
+                    ? parentJoinType = 'leftJoin'
+                    : serviceOptions.joinType;
             }
             const [andWhereParam, andWhereParamValue] = DefaultService.parseAndWhere(alias, parent.name, serviceOptions.andWhere);
             const parentQb = parentService.getRepository().createQueryBuilder(alias + parent.alias);
