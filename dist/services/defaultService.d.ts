@@ -35,7 +35,6 @@ declare abstract class DefaultService<T> extends ServiceUtil implements ParamSer
     find(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<T>;
     save(entity: T, transactionEntityManager?: EntityManager): Promise<T>;
     remove(entity: T, transactionEntityManager?: EntityManager): Promise<T>;
-    protected checkIgnore(serviceOptions: ServiceOptions<Subitem>, join: string): boolean;
     private prepareQuery;
     private prepareListQuery;
 }

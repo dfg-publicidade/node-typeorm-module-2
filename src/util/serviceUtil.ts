@@ -6,6 +6,10 @@ import ServiceOptions from '../interfaces/serviceOptions';
 
 /* Module */
 abstract class ServiceUtil {
+    protected static notIgnored(serviceOptions: ServiceOptions<any>, join: string): boolean {
+        return !serviceOptions.ignore || !serviceOptions.ignore.some((ignore: string): boolean => ignore.toLowerCase().indexOf(join.toLowerCase()) !== -1);
+    }
+
     protected static forParents(
         alias: string,
         parentEntities: ParentEntity[],
@@ -23,7 +27,6 @@ abstract class ServiceUtil {
                 break;
             }
             if (this.toIgnore(serviceOptions, alias + parent.alias)) {
-                serviceOptions?.ignore?.push(alias + parent.alias);
                 continue;
             }
 

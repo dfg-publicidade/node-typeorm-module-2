@@ -206,6 +206,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
             const childQb: SelectQueryBuilder<any> = childService.getRepository().createQueryBuilder(alias + child.alias);
 
+            serviceOptions.ignore?.push(`${child.alias}${alias}`);
+
             if (!child.dependent && (childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect')) {
                 childService.setDefaultQuery(alias + child.alias, childQb, serviceOptions, options);
             }
@@ -499,10 +501,6 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             const repository: Repository<T> = this.getRepository();
             return repository.save(entity);
         }
-    }
-
-    protected checkIgnore(serviceOptions: ServiceOptions<Subitem>, join: string): boolean {
-        return !serviceOptions.ignore || !serviceOptions.ignore.some((ignore: string): boolean => ignore.toLowerCase().indexOf(join.toLowerCase()) !== -1);
     }
 
     private prepareQuery(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): SelectQueryBuilder<T> {

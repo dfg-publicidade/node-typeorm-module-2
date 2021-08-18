@@ -6,14 +6,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const node_strings_module_1 = __importDefault(require("@dfgpublicidade/node-strings-module"));
 /* Module */
 class ServiceUtil {
+    static notIgnored(serviceOptions, join) {
+        return !serviceOptions.ignore || !serviceOptions.ignore.some((ignore) => ignore.toLowerCase().indexOf(join.toLowerCase()) !== -1);
+    }
     static forParents(alias, parentEntities, action, serviceOptions, options) {
-        var _a;
         for (const parent of parentEntities) {
             if (this.isNotOnly(serviceOptions, parent.name)) {
                 break;
             }
             if (this.toIgnore(serviceOptions, alias + parent.alias)) {
-                (_a = serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.ignore) === null || _a === void 0 ? void 0 : _a.push(alias + parent.alias);
                 continue;
             }
             if (this.isNotOrigin(serviceOptions, parent)) {
