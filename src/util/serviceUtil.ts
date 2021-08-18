@@ -23,6 +23,7 @@ abstract class ServiceUtil {
                 break;
             }
             if (this.toIgnore(serviceOptions, alias + parent.alias)) {
+                serviceOptions?.ignore?.push(alias + parent.alias);
                 continue;
             }
 

@@ -7,11 +7,13 @@ const node_strings_module_1 = __importDefault(require("@dfgpublicidade/node-stri
 /* Module */
 class ServiceUtil {
     static forParents(alias, parentEntities, action, serviceOptions, options) {
+        var _a;
         for (const parent of parentEntities) {
             if (this.isNotOnly(serviceOptions, parent.name)) {
                 break;
             }
             if (this.toIgnore(serviceOptions, alias + parent.alias)) {
+                (_a = serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.ignore) === null || _a === void 0 ? void 0 : _a.push(alias + parent.alias);
                 continue;
             }
             if (this.isNotOrigin(serviceOptions, parent)) {
