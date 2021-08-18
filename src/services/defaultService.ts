@@ -501,6 +501,10 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         }
     }
 
+    protected checkIgnore(serviceOptions: ServiceOptions<Subitem>, join: string): boolean {
+        return !serviceOptions.ignore || !serviceOptions.ignore.some((ignore: string): boolean => ignore.toLowerCase().endsWith(join.toLowerCase()));
+    }
+
     private prepareQuery(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): SelectQueryBuilder<T> {
         const qb: SelectQueryBuilder<T> = this.getRepository().createQueryBuilder(alias);
 

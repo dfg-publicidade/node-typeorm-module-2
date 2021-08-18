@@ -366,6 +366,9 @@ class DefaultService extends serviceUtil_1.default {
             return repository.save(entity);
         }
     }
+    checkIgnore(serviceOptions, join) {
+        return !serviceOptions.ignore || !serviceOptions.ignore.some((ignore) => ignore.toLowerCase().endsWith(join.toLowerCase()));
+    }
     prepareQuery(alias, queryParser, serviceOptions, options) {
         const qb = this.getRepository().createQueryBuilder(alias);
         this.setJoins(alias, qb, serviceOptions, options);
