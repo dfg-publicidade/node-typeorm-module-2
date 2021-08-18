@@ -367,7 +367,7 @@ class DefaultService extends serviceUtil_1.default {
         }
     }
     checkIgnore(serviceOptions, join) {
-        return !serviceOptions.ignore || !serviceOptions.ignore.some((ignore) => ignore.toLowerCase().endsWith(join.toLowerCase()));
+        return !serviceOptions.ignore || !serviceOptions.ignore.some((ignore) => ignore.toLowerCase().indexOf(join.toLowerCase()) !== -1);
     }
     prepareQuery(alias, queryParser, serviceOptions, options) {
         const qb = this.getRepository().createQueryBuilder(alias);
