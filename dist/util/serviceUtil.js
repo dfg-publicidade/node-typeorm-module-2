@@ -7,7 +7,9 @@ const node_strings_module_1 = __importDefault(require("@dfgpublicidade/node-stri
 /* Module */
 class ServiceUtil {
     static notIgnored(serviceOptions, join) {
-        return !serviceOptions.ignore || !serviceOptions.ignore.some((ignore) => ignore.toLowerCase() === join.toLowerCase());
+        return !serviceOptions.ignore || !serviceOptions.ignore.some((ignore) => ignore.indexOf('*') === -1
+            ? ignore.toLowerCase() === join.toLowerCase()
+            : join.toLowerCase().startsWith(ignore.toLowerCase().replace('*', '')));
     }
     static forParents(alias, parentEntities, action, serviceOptions, options) {
         for (const parent of parentEntities) {
