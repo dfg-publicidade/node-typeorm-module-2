@@ -7,7 +7,7 @@ import ServiceOptions from '../interfaces/serviceOptions';
 /* Module */
 abstract class ServiceUtil {
     protected static notIgnored(serviceOptions: ServiceOptions<any>, join: string): boolean {
-        return !serviceOptions.ignore || !serviceOptions.ignore.some((ignore: string): boolean => ignore.toLowerCase().indexOf(join.toLowerCase()) !== -1);
+        return !serviceOptions.ignore || !serviceOptions.ignore.some((ignore: string): boolean => ignore.toLowerCase() === join.toLowerCase());
     }
 
     protected static forParents(
