@@ -144,7 +144,7 @@ class DefaultService extends serviceUtil_1.default {
                 childJoinType = serviceOptions.joinType;
             }
             const childQb = childService.getRepository().createQueryBuilder(alias + child.alias);
-            (_a = serviceOptions.ignore) === null || _a === void 0 ? void 0 : _a.push(`${child.alias}${alias}*`);
+            (_a = serviceOptions.ignore) === null || _a === void 0 ? void 0 : _a.push(`${alias}${child.alias}*`);
             if (!child.dependent && (childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect')) {
                 childService.setDefaultQuery(alias + child.alias, childQb, serviceOptions, options);
             }

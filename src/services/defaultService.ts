@@ -206,7 +206,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
             const childQb: SelectQueryBuilder<any> = childService.getRepository().createQueryBuilder(alias + child.alias);
 
-            serviceOptions.ignore?.push(`${child.alias}${alias}*`);
+            serviceOptions.ignore?.push(`${alias}${child.alias}*`);
 
             if (!child.dependent && (childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect')) {
                 childService.setDefaultQuery(alias + child.alias, childQb, serviceOptions, options);
