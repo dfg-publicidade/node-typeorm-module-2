@@ -130,10 +130,11 @@ class DefaultService extends serviceUtil_1.default {
                 ignore: serviceOptions.ignore,
                 only: parent.only,
                 andWhere: serviceOptions.andWhere,
-                joinType: parentJoinType
+                joinType: parentJoinType,
+                parent: true
             }, options);
             if (parent.dependent && (parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect')) {
-                parentService.setDefaultQuery(alias + parent.alias, qb, serviceOptions, options);
+                parentService.setDefaultQuery(alias + parent.alias, qb, Object.assign(Object.assign({}, serviceOptions), { parent: true }), options);
             }
         }, serviceOptions, options);
         DefaultService.forChilds(alias, this.childEntities, (alias, child, serviceOptions, options) => {
@@ -180,7 +181,7 @@ class DefaultService extends serviceUtil_1.default {
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
         }
-        if (this.deletedAtField) {
+        if (this.deletedAtField && (serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.parent)) {
             qb.andWhere(`${alias}.${this.deletedAtField} IS NULL`);
         }
     }
