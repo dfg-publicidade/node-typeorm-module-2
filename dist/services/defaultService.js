@@ -117,7 +117,7 @@ class DefaultService extends serviceUtil_1.default {
             const [andWhereParam, andWhereParamValue] = DefaultService.parseAndWhere(alias, parent.name, serviceOptions.andWhere);
             const parentQb = parentService.getRepository().createQueryBuilder(alias + parent.alias);
             if (!parent.dependent && (parentJoinType === 'leftJoin' || parentJoinType === 'leftJoinAndSelect')) {
-                parentService.setDefaultQuery(alias + parent.alias, parentQb, serviceOptions, options);
+                parentService.setDefaultQuery(alias + parent.alias, parentQb, Object.assign(Object.assign({}, serviceOptions), { parent: true }), options);
             }
             if (andWhereParam) {
                 parentQb.andWhere(andWhereParam);
