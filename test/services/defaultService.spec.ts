@@ -901,7 +901,7 @@ describe('DefaultService', (): void => {
                     }
                 ]
             }
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT

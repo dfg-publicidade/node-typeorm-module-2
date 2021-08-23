@@ -182,11 +182,15 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
                 ignore: serviceOptions.ignore,
                 only: parent.only,
                 andWhere: serviceOptions.andWhere,
-                joinType: parentJoinType
+                joinType: parentJoinType,
+                parent: true
             }, options);
 
             if (parent.dependent && (parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect')) {
-                parentService.setDefaultQuery(alias + parent.alias, qb, serviceOptions, options);
+                parentService.setDefaultQuery(alias + parent.alias, qb, {
+                    ...serviceOptions,
+                    parent: true
+                }, options);
             }
         }, serviceOptions, options);
 
@@ -257,7 +261,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             throw new Error('Service options was not provided.');
         }
 
-        if (this.deletedAtField) {
+        if (this.deletedAtField && serviceOptions?.parent) {
             qb.andWhere(`${alias}.${this.deletedAtField} IS NULL`);
         }
     }

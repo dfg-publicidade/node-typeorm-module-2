@@ -11,6 +11,7 @@ interface ServiceOptions<T> {
     origin?: string;
     sort?: any;
     subitems?: T[];
+    parent?: boolean;
 }
 
 export default ServiceOptions;
