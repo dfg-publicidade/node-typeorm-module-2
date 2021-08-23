@@ -181,7 +181,7 @@ class DefaultService extends serviceUtil_1.default {
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
         }
-        if (this.deletedAtField && (serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.parent)) {
+        if (this.deletedAtField && !(serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.parent)) {
             qb.andWhere(`${alias}.${this.deletedAtField} IS NULL`);
         }
     }
