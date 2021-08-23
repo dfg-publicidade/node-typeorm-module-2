@@ -261,7 +261,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             throw new Error('Service options was not provided.');
         }
 
-        if (this.deletedAtField && serviceOptions?.parent) {
+        if (this.deletedAtField && !serviceOptions?.parent) {
             qb.andWhere(`${alias}.${this.deletedAtField} IS NULL`);
         }
     }
