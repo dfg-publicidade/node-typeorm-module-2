@@ -90,21 +90,7 @@ abstract class ServiceUtil {
             return undefined;
         }
         else {
-            let end: number = where.indexOf('ORDER BY');
-
-            if (end === -1) {
-                end = where.indexOf('GROUP BY');
-            }
-
-            if (end === -1) {
-                end = where.indexOf('LIMIT BY');
-            }
-
-            if (end === -1) {
-                end = where.length;
-            }
-
-            where = where.substring(where.indexOf('WHERE') + 'WHERE'.length, end).trim();
+            where = where.substring(where.indexOf('WHERE') + 'WHERE'.length).trim();
             where = where.replace(new RegExp(`${refAlias}${Strings.firstCharToUpper(alias)}`, 'g'), alias);
 
             return {

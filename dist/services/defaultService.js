@@ -65,8 +65,8 @@ class DefaultService extends serviceUtil_1.default {
                 for (const inner of this.innerEntities) {
                     if (inner.name === subfield) {
                         const innerService = new this.classObj(this.connectionName);
-                        innerService.parentEntities = inner.parentEntities;
-                        innerService.childEntities = inner.childEntities;
+                        innerService.parentEntities = inner.parentEntities || [];
+                        innerService.childEntities = inner.childEntities || [];
                         const result = innerService.translateParams(compl, inner.alias);
                         return result ? `${alias}.${result}` : undefined;
                     }
@@ -105,7 +105,7 @@ class DefaultService extends serviceUtil_1.default {
             const parentService = parent.service.getInstance(this.connectionName);
             let parentJoinType = parent.joinType ? parent.joinType : 'innerJoinAndSelect';
             let noSelect = false;
-            if (parentJoinType.indexOf('AndSelect') === -1 || ((_a = serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.joinType) === null || _a === void 0 ? void 0 : _a.indexOf('AndSelect')) === -1) {
+            if (parentJoinType.indexOf('AndSelect') === -1 || ((_a = serviceOptions.joinType) === null || _a === void 0 ? void 0 : _a.indexOf('AndSelect')) === -1) {
                 noSelect = true;
             }
             if ((parentJoinType === 'innerJoin' || parentJoinType === 'innerJoinAndSelect') && serviceOptions.joinType) {
@@ -181,7 +181,7 @@ class DefaultService extends serviceUtil_1.default {
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
         }
-        if (this.deletedAtField && !(serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.parent)) {
+        if (this.deletedAtField && !serviceOptions.parent) {
             qb.andWhere(`${alias}.${this.deletedAtField} IS NULL`);
         }
     }
@@ -241,14 +241,9 @@ class DefaultService extends serviceUtil_1.default {
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
         }
-        const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
+        const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
         this.debug(qb.getSql());
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
-        }
-        else {
-            return qb.getMany();
-        }
+        return qb.getMany();
     }
     async count(alias, queryParser, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
@@ -260,14 +255,9 @@ class DefaultService extends serviceUtil_1.default {
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
         }
-        const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
+        const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
         this.debug(qb.getSql());
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
-        }
-        else {
-            return qb.getCount();
-        }
+        return qb.getCount();
     }
     async listAndCount(alias, queryParser, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
@@ -279,14 +269,9 @@ class DefaultService extends serviceUtil_1.default {
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
         }
-        const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
+        const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
         this.debug(qb.getSql());
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
-        }
-        else {
-            return qb.getManyAndCount();
-        }
+        return qb.getManyAndCount();
     }
     async listBy(alias, fieldName, fieldValue, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
@@ -302,14 +287,9 @@ class DefaultService extends serviceUtil_1.default {
             const findParamValue = {};
             findParamValue[fieldName] = fieldValue;
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
-        }, serviceOptions, options);
+        }, serviceOptions, options, transactionEntityManager);
         this.debug(qb.getSql());
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
-        }
-        else {
-            return qb.getMany();
-        }
+        return qb.getMany();
     }
     async findById(alias, id, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
@@ -325,14 +305,9 @@ class DefaultService extends serviceUtil_1.default {
             qb.where(`${alias}.${this.idField} = :id`, {
                 id
             });
-        }, serviceOptions, options);
+        }, serviceOptions, options, transactionEntityManager);
         this.debug(qb.getSql());
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
-        }
-        else {
-            return qb.getOne();
-        }
+        return qb.getOne();
     }
     async findBy(alias, fieldName, fieldValue, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
@@ -348,14 +323,9 @@ class DefaultService extends serviceUtil_1.default {
             const findParamValue = {};
             findParamValue[fieldName] = fieldValue;
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
-        }, serviceOptions, options);
+        }, serviceOptions, options, transactionEntityManager);
         this.debug(qb.getSql());
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
-        }
-        else {
-            return qb.getOne();
-        }
+        return qb.getOne();
     }
     async find(alias, queryParser, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
@@ -367,14 +337,9 @@ class DefaultService extends serviceUtil_1.default {
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
         }
-        const qb = this.prepareQuery(alias, queryParser, serviceOptions, options);
+        const qb = this.prepareQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
         this.debug(qb.getSql());
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
-        }
-        else {
-            return qb.getOne();
-        }
+        return qb.getOne();
     }
     async save(entity, transactionEntityManager) {
         if (!entity) {
@@ -404,15 +369,17 @@ class DefaultService extends serviceUtil_1.default {
             return repository.save(entity);
         }
     }
-    prepareQuery(alias, queryParser, serviceOptions, options) {
-        const qb = this.getRepository().createQueryBuilder(alias);
+    prepareQuery(alias, queryParser, serviceOptions, options, transactionEntityManager) {
+        const qb = transactionEntityManager
+            ? transactionEntityManager.createQueryBuilder(this.repositoryType, alias)
+            : this.getRepository().createQueryBuilder(alias);
         this.setJoins(alias, qb, serviceOptions, options);
         queryParser(qb);
         this.setDefaultQuery(alias, qb, serviceOptions, options);
         return qb;
     }
-    prepareListQuery(alias, queryParser, serviceOptions, options) {
-        const qb = this.prepareQuery(alias, queryParser, serviceOptions, options);
+    prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager) {
+        const qb = this.prepareQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
         qb.orderBy(this.getSorting(alias, serviceOptions, options));
         this.setPagination(qb, serviceOptions);
         return qb;

@@ -88,8 +88,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
                 for (const inner of this.innerEntities) {
                     if (inner.name === subfield) {
                         const innerService: DefaultService<T> = new this.classObj(this.connectionName);
-                        innerService.parentEntities = inner.parentEntities;
-                        innerService.childEntities = inner.childEntities;
+                        innerService.parentEntities = inner.parentEntities || [];
+                        innerService.childEntities = inner.childEntities || [];
 
                         const result: string = innerService.translateParams(compl, inner.alias);
 
@@ -143,7 +143,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             let parentJoinType: JoinType = parent.joinType ? parent.joinType : 'innerJoinAndSelect';
 
             let noSelect: boolean = false;
-            if (parentJoinType.indexOf('AndSelect') === -1 || serviceOptions?.joinType?.indexOf('AndSelect') === -1) {
+            if (parentJoinType.indexOf('AndSelect') === -1 || serviceOptions.joinType?.indexOf('AndSelect') === -1) {
                 noSelect = true;
             }
 
@@ -264,7 +264,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             throw new Error('Service options was not provided.');
         }
 
-        if (this.deletedAtField && !serviceOptions?.parent) {
+        if (this.deletedAtField && !serviceOptions.parent) {
             qb.andWhere(`${alias}.${this.deletedAtField} IS NULL`);
         }
     }
@@ -349,16 +349,11 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             throw new Error('Service options was not provided.');
         }
 
-        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
+        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
 
         this.debug(qb.getSql());
 
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
-        }
-        else {
-            return qb.getMany();
-        }
+        return qb.getMany();
     }
 
     public async count(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any,
@@ -373,16 +368,11 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             throw new Error('Service options was not provided.');
         }
 
-        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
+        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
 
         this.debug(qb.getSql());
 
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
-        }
-        else {
-            return qb.getCount();
-        }
+        return qb.getCount();
     }
 
     public async listAndCount(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any,
@@ -397,16 +387,11 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             throw new Error('Service options was not provided.');
         }
 
-        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options);
+        const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
 
         this.debug(qb.getSql());
 
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
-        }
-        else {
-            return qb.getManyAndCount();
-        }
+        return qb.getManyAndCount();
     }
 
     public async listBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options: any,
@@ -426,16 +411,11 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             findParamValue[fieldName] = fieldValue;
 
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
-        }, serviceOptions, options);
+        }, serviceOptions, options, transactionEntityManager);
 
         this.debug(qb.getSql());
 
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
-        }
-        else {
-            return qb.getMany();
-        }
+        return qb.getMany();
     }
 
     public async findById(alias: string, id: number, serviceOptions: ServiceOptions<Subitem>, options: any,
@@ -454,16 +434,11 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             qb.where(`${alias}.${this.idField} = :id`, {
                 id
             });
-        }, serviceOptions, options);
+        }, serviceOptions, options, transactionEntityManager);
 
         this.debug(qb.getSql());
 
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
-        }
-        else {
-            return qb.getOne();
-        }
+        return qb.getOne();
     }
 
     public async findBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options: any,
@@ -483,16 +458,11 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             findParamValue[fieldName] = fieldValue;
 
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
-        }, serviceOptions, options);
+        }, serviceOptions, options, transactionEntityManager);
 
         this.debug(qb.getSql());
 
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
-        }
-        else {
-            return qb.getOne();
-        }
+        return qb.getOne();
     }
 
     public async find(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any,
@@ -507,16 +477,11 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             throw new Error('Service options was not provided.');
         }
 
-        const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, queryParser, serviceOptions, options);
+        const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
 
         this.debug(qb.getSql());
 
-        if (transactionEntityManager) {
-            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
-        }
-        else {
-            return qb.getOne();
-        }
+        return qb.getOne();
     }
 
     public async save(entity: T, transactionEntityManager?: EntityManager): Promise<T> {
@@ -552,8 +517,11 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         }
     }
 
-    private prepareQuery(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): SelectQueryBuilder<T> {
-        const qb: SelectQueryBuilder<T> = this.getRepository().createQueryBuilder(alias);
+    private prepareQuery(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any,
+        transactionEntityManager?: EntityManager): SelectQueryBuilder<T> {
+        const qb: SelectQueryBuilder<T> = transactionEntityManager
+            ? transactionEntityManager.createQueryBuilder(this.repositoryType, alias)
+            : this.getRepository().createQueryBuilder(alias);
 
         this.setJoins(alias, qb, serviceOptions, options);
 
@@ -564,8 +532,9 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         return qb;
     }
 
-    private prepareListQuery(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): SelectQueryBuilder<T> {
-        const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, queryParser, serviceOptions, options);
+    private prepareListQuery(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any,
+        transactionEntityManager?: EntityManager): SelectQueryBuilder<T> {
+        const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
 
         qb.orderBy(this.getSorting(alias, serviceOptions, options));
 

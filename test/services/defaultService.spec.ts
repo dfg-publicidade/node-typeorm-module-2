@@ -4,6 +4,7 @@ import { expect } from 'chai';
 import { after, before, describe, it } from 'mocha';
 import { Column, Connection, Entity, EntityManager, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, SelectQueryBuilder } from 'typeorm';
 import { DefaultService, JoinType, ServiceOptions, TypeOrmManager } from '../../src';
+import ServiceUtil from '../../src/util/serviceUtil';
 
 /* Tests */
 @Entity({
@@ -80,11 +81,32 @@ class Test3 {
     public test: Test2;
 }
 
+class Test5Compl {
+    @Column({
+        type: 'varchar'
+    })
+    public name: string;
+}
+
+@Entity({
+    name: 'Test5'
+})
+class Test5 {
+    @PrimaryGeneratedColumn()
+    public id: number;
+
+    @Column((): any => Test5Compl, {
+        prefix: ''
+    })
+    public compl: Test5Compl;
+}
+
 class TypeOrmManagerTest extends TypeOrmManager {
     protected static entities: any[] = [
         Test,
         Test2,
-        Test3
+        Test3,
+        Test5
     ];
 }
 
@@ -187,7 +209,7 @@ class TestService2 extends DefaultService<Test2> {
         return instance;
     }
 
-    public setDefaultQuery(alias: string, qb: SelectQueryBuilder<any>): void {
+    public setDefaultQuery(alias: string, qb: SelectQueryBuilder<any>, serviceOptions: ServiceOptions<any>): void {
         super.setDefaultQuery(alias, qb, {}, {});
 
         qb.andWhere(`${alias}.id > 0`);
@@ -225,6 +247,8 @@ class TestService2 extends DefaultService<Test2> {
 }
 
 class TestService3 extends DefaultService<Test3> {
+    public deletedAtField: string = undefined;
+
     private constructor(connectionName: string) {
         super(Test3, TestService3, connectionName);
 
@@ -239,6 +263,49 @@ class TestService3 extends DefaultService<Test3> {
 
     public static getInstance(connectionName: string): TestService3 {
         return new TestService3(connectionName);
+    }
+
+    public setDefaultQuery(alias: string, qb: SelectQueryBuilder<any>, serviceOptions: ServiceOptions<any>): void {
+        super.setDefaultQuery(alias, qb, {}, {});
+
+        if (ServiceUtil.notIgnored(serviceOptions, `${alias}Test2.id`)) {
+            qb.andWhere(`${alias}Test2.id > 0`);
+        }
+    }
+}
+
+class TestService4 extends DefaultService<Test3> {
+    public deletedAtField: string = undefined;
+
+    private constructor(connectionName: string) {
+        super(Test3, TestService3, connectionName);
+
+        this.parentEntities = [{
+            name: 'test',
+            alias: 'Test2',
+            service: TestService2,
+            joinType: 'innerJoin'
+        }];
+
+        this.childEntities = [];
+    }
+
+    public static getInstance(connectionName: string): TestService4 {
+        return new TestService4(connectionName);
+    }
+}
+
+class TestService5 extends DefaultService<Test5> {
+    public deletedAtField: string = undefined;
+
+    private constructor(connectionName: string) {
+        super(Test5, TestService5, connectionName);
+
+        this.innerEntities = [{ name: 'compl' }];
+    }
+
+    public static getInstance(connectionName: string): TestService5 {
+        return new TestService5(connectionName);
     }
 }
 
@@ -262,6 +329,16 @@ class TestServiceFail extends DefaultService<Test> {
     }
 }
 
+class TestServiceFail2 extends DefaultService<Test> {
+    private constructor(connectionName: string) {
+        super(Test, undefined, connectionName);
+    }
+
+    public static getInstance(connectionName: string): TestServiceFail {
+        return new TestServiceFail2(connectionName);
+    }
+}
+
 describe('DefaultService', (): void => {
     const connectionName: string = 'mysql';
     let connection: Connection;
@@ -269,6 +346,8 @@ describe('DefaultService', (): void => {
     let testService: TestService;
     let testService2: TestService2;
     let testService3: TestService3;
+    let testService4: TestService4;
+    let testService5: TestService5;
     let app: App;
 
     const options: any = {
@@ -332,6 +411,12 @@ describe('DefaultService', (): void => {
                 CONSTRAINT FOREIGN KEY (test) REFERENCES Test2(id)
             )
         `);
+        await connection.manager.query(`
+            CREATE TABLE IF NOT EXISTS Test5 (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                complName VARCHAR(10)
+            )
+        `);
 
         await connection.manager.query(`
             INSERT INTO Test(name) VALUES ('test')
@@ -341,6 +426,9 @@ describe('DefaultService', (): void => {
         `);
         await connection.manager.query(`
             INSERT INTO Test3(test) VALUES (1)
+        `);
+        await connection.manager.query(`
+            INSERT INTO Test5(complName) VALUES ('test')
         `);
 
         const appInfo: AppInfo = {
@@ -359,6 +447,7 @@ describe('DefaultService', (): void => {
     });
 
     after(async (): Promise<void> => {
+        await connection.manager.query('DROP TABLE Test5');
         await connection.manager.query('DROP TABLE Test3');
         await connection.manager.query('DROP TABLE Test2');
         await connection.manager.query('DROP TABLE Test');
@@ -374,6 +463,12 @@ describe('DefaultService', (): void => {
 
     it('2. constructor', async (): Promise<void> => {
         expect((): void => {
+            TestServiceFail2.getInstance(undefined);
+        }).to.throw('Repository class was not provided.');
+    });
+
+    it('3. constructor', async (): Promise<void> => {
+        expect((): void => {
             TestService.getInstance(undefined);
         }).to.throw('Connection name was not provided');
     });
@@ -382,10 +477,14 @@ describe('DefaultService', (): void => {
         testService = TestService.getInstance(connectionName);
         testService2 = TestService2.getInstance(connectionName);
         testService3 = TestService3.getInstance(connectionName);
+        testService4 = TestService4.getInstance(connectionName);
+        testService5 = TestService5.getInstance(connectionName);
 
         expect(testService).to.exist;
         expect(testService2).to.exist;
         expect(testService3).to.exist;
+        expect(testService4).to.exist;
+        expect(testService5).to.exist;
     });
 
     it('4. getRepository', async (): Promise<void> => {
@@ -437,13 +536,21 @@ describe('DefaultService', (): void => {
         expect(testService.translateParams('test.tests.invalid.id')).to.be.undefined;
     });
 
+    it('13. translateParams', async (): Promise<void> => {
+        expect(testService5.translateParams('test.compl.name')).to.be.eq('test.compl.name');
+    });
+
+    it('13. translateParams', async (): Promise<void> => {
+        expect(testService5.translateParams('test.compl.invalid.id')).to.be.undefined;
+    });
+
     it('14. setDefaultQuery', async (): Promise<void> => {
         const test: string = 'test';
 
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
         expect((): void => {
-            testService.setDefaultQuery(undefined, qb, {});
+            testService.setDefaultQuery(undefined, qb, {}, {});
         }).to.throw('Alias was not provided.');
     });
 
@@ -490,7 +597,7 @@ describe('DefaultService', (): void => {
 
         const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
 
-        testService2.setDefaultQuery(test2, qb);
+        testService2.setDefaultQuery(test2, qb, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -500,6 +607,70 @@ describe('DefaultService', (): void => {
             '${test2}'.'testB'      AS '${test2}_testB' 
             FROM 'Test2' '${test2}' 
             WHERE '${test2}'.'id' > 0
+        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+        expect(await qb.getCount()).to.be.eq(1);
+    });
+
+    it('19. setDefaultQuery', async (): Promise<void> => {
+        const test3: string = 'test3';
+        const test2: string = `${test3}Test2`;
+        const test: string = `${test2}Test`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test3> = testService3.getRepository().createQueryBuilder(test3);
+
+        testService3.setDefaultQuery(test3, qb, {});
+
+        testService3.setJoins(test3, qb, {}, {});
+
+        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+            SELECT
+            '${test3}'.'id'         AS '${test3}_id', 
+            '${test3}'.'test'       AS '${test3}_test', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+            
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test3' '${test3}'
+            INNER JOIN 'Test2' '${test2}'  ON '${test2}'.'id'='${test3}'.'test' 
+            INNER JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test'
+            INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+            WHERE '${test2}'.'id' > 0
+        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+        expect(await qb.getCount()).to.be.eq(1);
+    });
+
+    it('20. setDefaultQuery', async (): Promise<void> => {
+        const test3: string = 'test3';
+
+        const qb: SelectQueryBuilder<Test3> = testService3.getRepository().createQueryBuilder(test3);
+
+        testService3.setDefaultQuery(test3, qb, {
+            ignore: [
+                'test3Test2',
+                'test3Test2*'
+            ]
+        });
+
+        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+            SELECT
+            '${test3}'.'id'         AS '${test3}_id', 
+            '${test3}'.'test'       AS '${test3}_test' 
+            FROM 'Test3' '${test3}' 
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
@@ -1517,6 +1688,88 @@ describe('DefaultService', (): void => {
         expect(await qb.getCount()).to.be.eq(1);
     });
 
+    it('55. setJoins', async (): Promise<void> => {
+        const test3: string = 'test3';
+        const test2: string = `${test3}Test2`;
+        const test: string = `${test2}Test`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test3> = testService4.getRepository().createQueryBuilder(test3);
+
+        testService4.setJoins(test3, qb, {
+
+        }, {});
+
+        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+            SELECT
+            '${test3}'.'id'         AS '${test3}_id', 
+            '${test3}'.'test'       AS '${test3}_test' 
+            
+            FROM 'Test3' '${test3}'
+            INNER JOIN 'Test2' '${test2}' ON '${test2}'.'id'='${test3}'.'test'
+            INNER JOIN 'Test' '${test}' ON '${test}'.'id'='${test2}'.'test'
+            INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+        expect(await qb.getCount()).to.be.eq(1);
+    });
+
+    it('93. setJoins', async (): Promise<void> => {
+        const test3: string = 'test3';
+        const test2: string = `${test3}Test2`;
+        const test: string = `${test2}Test`;
+        const testB: string = `${test2}TestB`;
+
+        const qb: SelectQueryBuilder<Test3> = testService3.getRepository().createQueryBuilder(test3);
+
+        testService3.setJoins(test3, qb, {}, {});
+
+        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+            SELECT
+            '${test3}'.'id'         AS '${test3}_id', 
+            '${test3}'.'test'       AS '${test3}_test', 
+
+            '${test2}'.'id'         AS '${test2}_id', 
+            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
+            '${test2}'.'test'       AS '${test2}_test', 
+            '${test2}'.'testB'      AS '${test2}_testB', 
+            
+            '${test}'.'id'         AS '${test}_id', 
+            '${test}'.'name'       AS '${test}_name', 
+            '${test}'.'created_at' AS '${test}_created_at', 
+            '${test}'.'updated_at' AS '${test}_updated_at', 
+            '${test}'.'deleted_at' AS '${test}_deleted_at', 
+
+            '${testB}'.'id'         AS '${testB}_id', 
+            '${testB}'.'name'       AS '${testB}_name', 
+            '${testB}'.'created_at' AS '${testB}_created_at', 
+            '${testB}'.'updated_at' AS '${testB}_updated_at', 
+            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
+
+            FROM 'Test3' '${test3}'
+            INNER JOIN 'Test2' '${test2}'  ON '${test2}'.'id'='${test3}'.'test' 
+            INNER JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test' 
+            INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
+        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+        expect(await qb.getCount()).to.be.eq(1);
+    });
+
+    it('93. setJoins', async (): Promise<void> => {
+        const test5: string = 'test5';
+
+        const qb: SelectQueryBuilder<Test5> = testService5.getRepository().createQueryBuilder(test5);
+
+        testService5.setJoins(test5, qb, {}, {});
+
+        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
+            SELECT
+            '${test5}'.'id'         AS '${test5}_id', 
+            '${test5}'.'name'       AS '${test5}_name'
+
+            FROM 'Test5' '${test5}'
+        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
+        expect(await qb.getCount()).to.be.eq(1);
+    });
+
     it('55. setPagination', async (): Promise<void> => {
         expect((): void => {
             testService.setPagination(undefined, {});
@@ -2126,6 +2379,22 @@ describe('DefaultService', (): void => {
                 item = await testService.save(item, transactionEntityManager);
                 id = item.id;
 
+                expect(await testService.list('test', (): void => {
+                    //
+                }, {}, {}, transactionEntityManager)).to.not.be.empty;
+                expect(await testService.count('test', (): void => {
+                    //
+                }, {}, {}, transactionEntityManager)).to.be.gt(0);
+                expect(await testService.listAndCount('test', (): void => {
+                    //
+                }, {}, {}, transactionEntityManager)).to.exist;
+                expect(await testService.listBy('test', 'id', item.id, {}, {}, transactionEntityManager)).to.not.be.empty;
+                expect(await testService.findById('test', item.id, {}, {}, transactionEntityManager)).to.exist;
+                expect(await testService.findBy('test', 'id', item.id, {}, {}, transactionEntityManager)).to.exist;
+                expect(await testService.find('test', (): void => {
+                    //
+                }, {}, {}, transactionEntityManager)).to.not.be.empty;
+
                 throw Error('Test');
             });
         }
@@ -2173,45 +2442,5 @@ describe('DefaultService', (): void => {
         expect(id).to.exist;
         expect(err).to.exist.and.have.property('message').eq('Test');
         expect(await testService.findById('test', id, {}, {})).to.exist;
-    });
-
-    it('93. setJoins', async (): Promise<void> => {
-        const test3: string = 'test3';
-        const test2: string = `${test3}Test2`;
-        const test: string = `${test2}Test`;
-        const testB: string = `${test2}TestB`;
-
-        const qb: SelectQueryBuilder<Test3> = testService3.getRepository().createQueryBuilder(test3);
-
-        testService3.setJoins(test3, qb, {}, {});
-
-        expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
-            SELECT
-            '${test3}'.'id'         AS '${test3}_id', 
-            '${test3}'.'test'       AS '${test3}_test', 
-
-            '${test2}'.'id'         AS '${test2}_id', 
-            '${test2}'.'deleted_at' AS '${test2}_deleted_at', 
-            '${test2}'.'test'       AS '${test2}_test', 
-            '${test2}'.'testB'      AS '${test2}_testB', 
-            
-            '${test}'.'id'         AS '${test}_id', 
-            '${test}'.'name'       AS '${test}_name', 
-            '${test}'.'created_at' AS '${test}_created_at', 
-            '${test}'.'updated_at' AS '${test}_updated_at', 
-            '${test}'.'deleted_at' AS '${test}_deleted_at', 
-
-            '${testB}'.'id'         AS '${testB}_id', 
-            '${testB}'.'name'       AS '${testB}_name', 
-            '${testB}'.'created_at' AS '${testB}_created_at', 
-            '${testB}'.'updated_at' AS '${testB}_updated_at', 
-            '${testB}'.'deleted_at' AS '${testB}_deleted_at' 
-
-            FROM 'Test3' '${test3}'
-            INNER JOIN 'Test2' '${test2}'  ON '${test2}'.'id'='${test3}'.'test' 
-            INNER JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test' 
-            INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-        `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
-        expect(await qb.getCount()).to.be.eq(1);
     });
 });
