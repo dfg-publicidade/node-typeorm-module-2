@@ -231,7 +231,7 @@ class DefaultService extends serviceUtil_1.default {
             qb.skip(serviceOptions.paginate.getSkip());
         }
     }
-    async list(alias, queryParser, serviceOptions, options) {
+    async list(alias, queryParser, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -243,9 +243,14 @@ class DefaultService extends serviceUtil_1.default {
         }
         const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
         this.debug(qb.getSql());
-        return qb.getMany();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
+        }
+        else {
+            return qb.getMany();
+        }
     }
-    async count(alias, queryParser, serviceOptions, options) {
+    async count(alias, queryParser, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -257,9 +262,14 @@ class DefaultService extends serviceUtil_1.default {
         }
         const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
         this.debug(qb.getSql());
-        return qb.getCount();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
+        }
+        else {
+            return qb.getCount();
+        }
     }
-    async listAndCount(alias, queryParser, serviceOptions, options) {
+    async listAndCount(alias, queryParser, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -271,9 +281,14 @@ class DefaultService extends serviceUtil_1.default {
         }
         const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options);
         this.debug(qb.getSql());
-        return qb.getManyAndCount();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
+        }
+        else {
+            return qb.getManyAndCount();
+        }
     }
-    async listBy(alias, fieldName, fieldValue, serviceOptions, options) {
+    async listBy(alias, fieldName, fieldValue, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -289,9 +304,14 @@ class DefaultService extends serviceUtil_1.default {
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
         }, serviceOptions, options);
         this.debug(qb.getSql());
-        return qb.getMany();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
+        }
+        else {
+            return qb.getMany();
+        }
     }
-    async findById(alias, id, serviceOptions, options) {
+    async findById(alias, id, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -307,9 +327,14 @@ class DefaultService extends serviceUtil_1.default {
             });
         }, serviceOptions, options);
         this.debug(qb.getSql());
-        return qb.getOne();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
+        }
+        else {
+            return qb.getOne();
+        }
     }
-    async findBy(alias, fieldName, fieldValue, serviceOptions, options) {
+    async findBy(alias, fieldName, fieldValue, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -325,9 +350,14 @@ class DefaultService extends serviceUtil_1.default {
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
         }, serviceOptions, options);
         this.debug(qb.getSql());
-        return qb.getOne();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
+        }
+        else {
+            return qb.getOne();
+        }
     }
-    async find(alias, queryParser, serviceOptions, options) {
+    async find(alias, queryParser, serviceOptions, options, transactionEntityManager) {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -339,7 +369,12 @@ class DefaultService extends serviceUtil_1.default {
         }
         const qb = this.prepareQuery(alias, queryParser, serviceOptions, options);
         this.debug(qb.getSql());
-        return qb.getOne();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters());
+        }
+        else {
+            return qb.getOne();
+        }
     }
     async save(entity, transactionEntityManager) {
         if (!entity) {

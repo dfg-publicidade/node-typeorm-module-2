@@ -337,7 +337,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         }
     }
 
-    public async list(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<T[]> {
+    public async list(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any,
+        transactionEntityManager?: EntityManager): Promise<T[]> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -352,10 +353,16 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         this.debug(qb.getSql());
 
-        return qb.getMany();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
+        }
+        else {
+            return qb.getMany();
+        }
     }
 
-    public async count(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<number> {
+    public async count(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any,
+        transactionEntityManager?: EntityManager): Promise<number> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -370,10 +377,16 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         this.debug(qb.getSql());
 
-        return qb.getCount();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
+        }
+        else {
+            return qb.getCount();
+        }
     }
 
-    public async listAndCount(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<[T[], number]> {
+    public async listAndCount(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any,
+        transactionEntityManager?: EntityManager): Promise<[T[], number]> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -388,10 +401,16 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         this.debug(qb.getSql());
 
-        return qb.getManyAndCount();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
+        }
+        else {
+            return qb.getManyAndCount();
+        }
     }
 
-    public async listBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<T[]> {
+    public async listBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options: any,
+        transactionEntityManager?: EntityManager): Promise<T[]> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -411,10 +430,16 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         this.debug(qb.getSql());
 
-        return qb.getMany();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
+        }
+        else {
+            return qb.getMany();
+        }
     }
 
-    public async findById(alias: string, id: number, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<T> {
+    public async findById(alias: string, id: number, serviceOptions: ServiceOptions<Subitem>, options: any,
+        transactionEntityManager?: EntityManager): Promise<T> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -433,10 +458,16 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         this.debug(qb.getSql());
 
-        return qb.getOne();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
+        }
+        else {
+            return qb.getOne();
+        }
     }
 
-    public async findBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<T> {
+    public async findBy(alias: string, fieldName: string, fieldValue: any, serviceOptions: ServiceOptions<Subitem>, options: any,
+        transactionEntityManager?: EntityManager): Promise<T> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -456,10 +487,16 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         this.debug(qb.getSql());
 
-        return qb.getOne();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
+        }
+        else {
+            return qb.getOne();
+        }
     }
 
-    public async find(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any): Promise<T> {
+    public async find(alias: string, queryParser: (qb: SelectQueryBuilder<T>) => void, serviceOptions: ServiceOptions<Subitem>, options: any,
+        transactionEntityManager?: EntityManager): Promise<T> {
         if (!alias) {
             throw new Error('Alias was not provided.');
         }
@@ -474,7 +511,12 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         this.debug(qb.getSql());
 
-        return qb.getOne();
+        if (transactionEntityManager) {
+            return transactionEntityManager.query(qb.getQuery(), qb.getParameters() as any[]);
+        }
+        else {
+            return qb.getOne();
+        }
     }
 
     public async save(entity: T, transactionEntityManager?: EntityManager): Promise<T> {
