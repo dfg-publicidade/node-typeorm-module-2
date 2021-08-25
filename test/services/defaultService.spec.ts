@@ -473,7 +473,7 @@ describe('DefaultService', (): void => {
         }).to.throw('Connection name was not provided');
     });
 
-    it('3. constructor', async (): Promise<void> => {
+    it('4. constructor', async (): Promise<void> => {
         testService = TestService.getInstance(connectionName);
         testService2 = TestService2.getInstance(connectionName);
         testService3 = TestService3.getInstance(connectionName);
@@ -487,7 +487,7 @@ describe('DefaultService', (): void => {
         expect(testService5).to.exist;
     });
 
-    it('4. getRepository', async (): Promise<void> => {
+    it('5. getRepository', async (): Promise<void> => {
         let connectionError: any;
         try {
             await TestServiceB.getInstance('invalid').getRepository().query('SELECT 1');
@@ -500,51 +500,51 @@ describe('DefaultService', (): void => {
         expect(connectionError.message).to.contain('Connection or repository not found');
     });
 
-    it('5. getRepository', async (): Promise<void> => {
+    it('6. getRepository', async (): Promise<void> => {
         expect((await testService.getRepository().query('SELECT 1 AS result'))[0].result).to.be.eq('1');
     });
 
-    it('6. translateParams', async (): Promise<void> => {
+    it('7. translateParams', async (): Promise<void> => {
         expect(testService.translateParams(undefined)).to.be.eq('');
     });
 
-    it('7. translateParams', async (): Promise<void> => {
+    it('8. translateParams', async (): Promise<void> => {
         expect(testService2.translateParams('test2')).to.be.eq('test2');
     });
 
-    it('8. translateParams', async (): Promise<void> => {
+    it('9. translateParams', async (): Promise<void> => {
         expect(testService2.translateParams('test2.id')).to.be.eq('test2._id');
     });
 
-    it('9. translateParams', async (): Promise<void> => {
+    it('10. translateParams', async (): Promise<void> => {
         expect(testService2.translateParams('test2.test.id')).to.be.eq('test2Test._id');
     });
 
-    it('10. translateParams', async (): Promise<void> => {
+    it('11. translateParams', async (): Promise<void> => {
         expect(testService2.translateParams('test2.invalid.id')).to.be.undefined;
     });
 
-    it('11. translateParams', async (): Promise<void> => {
+    it('12. translateParams', async (): Promise<void> => {
         expect(testService2.translateParams('test2.test.invalid.id')).to.be.undefined;
     });
 
-    it('12. translateParams', async (): Promise<void> => {
+    it('13. translateParams', async (): Promise<void> => {
         expect(testService.translateParams('test.tests.id')).to.be.eq('testTest2._id');
     });
 
-    it('13. translateParams', async (): Promise<void> => {
+    it('14. translateParams', async (): Promise<void> => {
         expect(testService.translateParams('test.tests.invalid.id')).to.be.undefined;
     });
 
-    it('13. translateParams', async (): Promise<void> => {
+    it('15. translateParams', async (): Promise<void> => {
         expect(testService5.translateParams('test.compl.name')).to.be.eq('test.compl.name');
     });
 
-    it('13. translateParams', async (): Promise<void> => {
+    it('16. translateParams', async (): Promise<void> => {
         expect(testService5.translateParams('test.compl.invalid.id')).to.be.undefined;
     });
 
-    it('14. setDefaultQuery', async (): Promise<void> => {
+    it('17. setDefaultQuery', async (): Promise<void> => {
         const test: string = 'test';
 
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
@@ -554,7 +554,7 @@ describe('DefaultService', (): void => {
         }).to.throw('Alias was not provided.');
     });
 
-    it('15. setDefaultQuery', async (): Promise<void> => {
+    it('18. setDefaultQuery', async (): Promise<void> => {
         const test: string = 'test';
 
         expect((): void => {
