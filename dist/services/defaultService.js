@@ -79,7 +79,7 @@ class DefaultService extends serviceUtil_1.default {
                 }
                 for (const child of this.childEntities) {
                     if (child.name === subfield) {
-                        const result = child.service.getInstance(this.connectionName).translateParams(child.name, child.alias);
+                        const result = child.service.getInstance(this.connectionName).translateParams(compl, child.alias);
                         return result ? alias + result : undefined;
                     }
                 }

@@ -96,7 +96,7 @@ class TestService extends DefaultService<Test> {
     };
 
     private constructor(connectionName: string) {
-        super(Test, connectionName);
+        super(Test, TestService, connectionName);
 
         this.parentEntities = [];
 
@@ -161,7 +161,7 @@ class TestService2 extends DefaultService<Test2> {
     public deletedAtField: string = undefined;
 
     private constructor(connectionName: string) {
-        super(Test2, connectionName);
+        super(Test2, TestService2, connectionName);
 
         this.parentEntities = [{
             name: 'test',
@@ -188,7 +188,7 @@ class TestService2 extends DefaultService<Test2> {
     }
 
     public setDefaultQuery(alias: string, qb: SelectQueryBuilder<any>): void {
-        super.setDefaultQuery(alias, qb, {});
+        super.setDefaultQuery(alias, qb, {}, {});
 
         qb.andWhere(`${alias}.id > 0`);
     }
@@ -226,7 +226,7 @@ class TestService2 extends DefaultService<Test2> {
 
 class TestService3 extends DefaultService<Test3> {
     private constructor(connectionName: string) {
-        super(Test3, connectionName);
+        super(Test3, TestService3, connectionName);
 
         this.parentEntities = [{
             name: 'test',
@@ -244,7 +244,7 @@ class TestService3 extends DefaultService<Test3> {
 
 class TestServiceB extends DefaultService<Test> {
     private constructor(connectionName: string) {
-        super(Test, connectionName);
+        super(Test, TestServiceB, connectionName);
     }
 
     public static getInstance(connectionName: string): TestServiceB {
@@ -254,7 +254,7 @@ class TestServiceB extends DefaultService<Test> {
 
 class TestServiceFail extends DefaultService<Test> {
     private constructor(connectionName: string) {
-        super(undefined, connectionName);
+        super(undefined, TestServiceFail, connectionName);
     }
 
     public static getInstance(connectionName: string): TestServiceFail {
@@ -506,13 +506,13 @@ describe('DefaultService', (): void => {
 
     it('19. getSorting', async (): Promise<void> => {
         expect((): void => {
-            testService.getSorting(undefined, {});
+            testService.getSorting(undefined, {}, {});
         }).to.throw('Alias was not provided.');
     });
 
     it('20. getSorting', async (): Promise<void> => {
         expect((): void => {
-            testService.getSorting('test', undefined);
+            testService.getSorting('test', undefined, {});
         }).to.throw('Service options was not provided.');
     });
 
@@ -521,13 +521,13 @@ describe('DefaultService', (): void => {
             sort: {
                 'test.name': 'ASC'
             }
-        })).to.be.deep.eq({
+        }, {})).to.be.deep.eq({
             'test.name': 'ASC'
         });
     });
 
     it('22. getSorting', async (): Promise<void> => {
-        expect(testService.getSorting('test', {})).to.be.deep.eq({
+        expect(testService.getSorting('test', {}, {})).to.be.deep.eq({
             'test.name': 'ASC'
         });
     });
@@ -539,7 +539,7 @@ describe('DefaultService', (): void => {
 
         let sortingError: any;
         try {
-            testService2.getSorting('test2', {});
+            testService2.getSorting('test2', {}, {});
         }
         catch (error: any) {
             sortingError = error;
@@ -552,7 +552,7 @@ describe('DefaultService', (): void => {
     });
 
     it('24. getSorting', async (): Promise<void> => {
-        expect(testService2.getSorting('test2', {})).to.be.deep.eq({});
+        expect(testService2.getSorting('test2', {}, {})).to.be.deep.eq({});
     });
 
     it('25. getSorting', async (): Promise<void> => {
@@ -560,7 +560,7 @@ describe('DefaultService', (): void => {
             '$alias.title': 'ASC'
         });
 
-        expect(testService2.getSorting('test2', {})).to.be.deep.eq({
+        expect(testService2.getSorting('test2', {}, {})).to.be.deep.eq({
             'test2.title': 'ASC'
         });
 
@@ -570,7 +570,7 @@ describe('DefaultService', (): void => {
     it('26. getSorting', async (): Promise<void> => {
         expect(testService2.getSorting('test2', {
             ignore: ['test2Test']
-        })).to.be.deep.eq({});
+        }, {})).to.be.deep.eq({});
     });
 
     it('27. getSorting', async (): Promise<void> => {
@@ -580,7 +580,7 @@ describe('DefaultService', (): void => {
 
         expect(testService.getSorting('test', {
             subitems: ['tests', 'others']
-        })).to.be.deep.eq({
+        }, {})).to.be.deep.eq({
             'test.name': 'ASC',
             'testTest2.title': 'ASC'
         });
@@ -596,7 +596,7 @@ describe('DefaultService', (): void => {
         expect(testService.getSorting('test', {
             subitems: ['tests', 'others'],
             ignore: ['others']
-        })).to.be.deep.eq({
+        }, {})).to.be.deep.eq({
             'testTest2.title': 'ASC',
             'test.name': 'ASC'
         });
@@ -610,7 +610,7 @@ describe('DefaultService', (): void => {
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
         expect((): void => {
-            testService.setJoins(undefined, qb, {});
+            testService.setJoins(undefined, qb, {}, {});
         }).to.throw('Alias was not provided.');
     });
 
@@ -618,7 +618,7 @@ describe('DefaultService', (): void => {
         const test: string = 'test';
 
         expect((): void => {
-            testService.setJoins(test, undefined, {});
+            testService.setJoins(test, undefined, {}, {});
         }).to.throw('Query builder was not provided.');
     });
 
@@ -628,7 +628,7 @@ describe('DefaultService', (): void => {
         const qb: SelectQueryBuilder<Test> = testService.getRepository().createQueryBuilder(test);
 
         expect((): void => {
-            testService.setJoins(test, qb, undefined);
+            testService.setJoins(test, qb, undefined, {});
         }).to.throw('Service options was not provided.');
     });
 
@@ -641,7 +641,7 @@ describe('DefaultService', (): void => {
 
         testService.setJoins(test, qb, {
             subitems: ['tests']
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT 
@@ -666,7 +666,6 @@ describe('DefaultService', (): void => {
             LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='${test}'.'id'
                 AND ('${test2}'.'id' > 0)
             LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -682,7 +681,7 @@ describe('DefaultService', (): void => {
         testService.setJoins(test, qb, {
             subitems: ['tests'],
             joinType: 'innerJoinAndSelect'
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT 
@@ -706,7 +705,6 @@ describe('DefaultService', (): void => {
             FROM 'Test' '${test}'
             INNER JOIN 'Test2' '${test2}' ON '${test2}'.'test'='${test}'.'id'
             LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-            AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
@@ -722,7 +720,7 @@ describe('DefaultService', (): void => {
 
         testService.setJoins(test, qb, {
             subitems: ['tests']
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT 
@@ -746,7 +744,6 @@ describe('DefaultService', (): void => {
             FROM 'Test' '${test}'
             INNER JOIN 'Test2' '${test2}' ON '${test2}'.'test'='${test}'.'id'
             LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-            AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -764,7 +761,7 @@ describe('DefaultService', (): void => {
 
         testService.setJoins(test, qb, {
             subitems: ['tests']
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT 
@@ -789,7 +786,6 @@ describe('DefaultService', (): void => {
             LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
                 AND ('${test2}'.'deleted_at' IS NULL AND 'testTest2'.'id' > 0)
             LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -807,7 +803,7 @@ describe('DefaultService', (): void => {
 
         testService.setJoins(test, qb, {
             subitems: ['tests']
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -832,7 +828,6 @@ describe('DefaultService', (): void => {
             LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='${test}'.'id'
                 AND ('${test2}'.'id' > 0 AND '${test2}'.'deleted_at' IS NULL)
             LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -851,7 +846,7 @@ describe('DefaultService', (): void => {
 
         testService.setJoins(test, qb, {
             subitems: ['tests']
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -877,7 +872,6 @@ describe('DefaultService', (): void => {
                 AND ('${test2}'.'deleted_at' IS NULL AND '${test2}'.'id' > 0
                 AND '${test2}'.'deleted_at' IS NULL)
             LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -926,7 +920,6 @@ describe('DefaultService', (): void => {
             LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
                 AND ('${test2}'.'id' > 0 AND '${test2}'.'id' = ?)
             LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
@@ -947,7 +940,7 @@ describe('DefaultService', (): void => {
                     }
                 ]
             }
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -972,7 +965,6 @@ describe('DefaultService', (): void => {
             LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
                 AND ('${test2}'.'id' > 0)
             LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
@@ -995,7 +987,7 @@ describe('DefaultService', (): void => {
                     }
                 ]
             }
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1020,7 +1012,6 @@ describe('DefaultService', (): void => {
             LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
                 AND ('${test2}'.'deleted_at' IS NULL AND '${test2}'.'id' > 0 AND '${test2}'.'id' = ?)
             LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -1037,7 +1028,7 @@ describe('DefaultService', (): void => {
         testService.setJoins(test, qb, {
             subitems: ['tests'],
             ignore: ['other']
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1062,7 +1053,6 @@ describe('DefaultService', (): void => {
             LEFT JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
                 AND ('${test2}'.'id' > 0)
             LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -1077,7 +1067,7 @@ describe('DefaultService', (): void => {
         testService.setJoins(test, qb, {
             subitems: ['tests'],
             ignore: ['testTest2']
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1099,7 +1089,7 @@ describe('DefaultService', (): void => {
         testService.setJoins(test, qb, {
             subitems: ['tests'],
             only: 'other'
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1120,7 +1110,7 @@ describe('DefaultService', (): void => {
 
         const qb: SelectQueryBuilder<Test2> = testService2.getRepository().createQueryBuilder(test2);
 
-        testService2.setJoins(test2, qb, {});
+        testService2.setJoins(test2, qb, {}, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1157,7 +1147,7 @@ describe('DefaultService', (): void => {
 
         testService2.setParentJoinType('leftJoinAndSelect');
 
-        testService2.setJoins(test2, qb, {});
+        testService2.setJoins(test2, qb, {}, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1180,9 +1170,7 @@ describe('DefaultService', (): void => {
 
             FROM 'Test2' '${test2}'
             LEFT JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test'
-                AND ('${test}'.'deleted_at' IS NULL)
             LEFT JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -1198,7 +1186,7 @@ describe('DefaultService', (): void => {
 
         testService2.setJoins(test2, qb, {
             joinType: 'leftJoinAndSelect'
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1221,9 +1209,7 @@ describe('DefaultService', (): void => {
 
             FROM 'Test2' '${test2}'
             LEFT JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test'
-                AND ('${test}'.'deleted_at' IS NULL)
             LEFT JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
     });
@@ -1237,7 +1223,7 @@ describe('DefaultService', (): void => {
 
         testService2.setJoins(test2, qb, {
             ignore: ['other']
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1272,7 +1258,7 @@ describe('DefaultService', (): void => {
 
         testService2.setJoins(test2, qb, {
             only: 'other'
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1295,7 +1281,7 @@ describe('DefaultService', (): void => {
 
         testService.setDeletedField(undefined);
 
-        testService2.setJoins(test2, qb, {});
+        testService2.setJoins(test2, qb, {}, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1334,7 +1320,7 @@ describe('DefaultService', (): void => {
 
         testService2.setDependent(true);
 
-        testService2.setJoins(test2, qb, {});
+        testService2.setJoins(test2, qb, {}, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1358,7 +1344,6 @@ describe('DefaultService', (): void => {
             FROM 'Test2' '${test2}'
             INNER JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test' 
             INNER JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-            WHERE '${test}'.'deleted_at' IS NULL
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -1380,7 +1365,7 @@ describe('DefaultService', (): void => {
                     }
                 ]
             }
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1428,7 +1413,7 @@ describe('DefaultService', (): void => {
                     }
                 ]
             }
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1453,7 +1438,6 @@ describe('DefaultService', (): void => {
             INNER JOIN 'Test2' '${test2}' ON '${test2}'.'test'='test'.'id'
                 AND ('testTest2'.'id' = ?)
             LEFT JOIN 'Test'  '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
             WHERE '${test2}'.'id' > 0
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
@@ -1474,7 +1458,7 @@ describe('DefaultService', (): void => {
             sort: {
                 'test.id': 1
             }
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1497,9 +1481,7 @@ describe('DefaultService', (): void => {
 
             FROM 'Test2' '${test2}'
             LEFT JOIN 'Test' '${test}'  ON '${test}'.'id'='${test2}'.'test'
-                AND ('${test}'.'deleted_at' IS NULL)
             LEFT JOIN 'Test' '${testB}' ON '${testB}'.'id'='${test2}'.'testB'
-                AND ('${testB}'.'deleted_at' IS NULL)
         `.replace(/[\r|\n|\t]/ig, '').replace(/\s+/ig, ' ').replace(/'/ig, '`').trim());
         expect(await qb.getCount()).to.be.eq(1);
 
@@ -1514,7 +1496,7 @@ describe('DefaultService', (): void => {
 
         testService2.setJoins(test2, qb, {
             ignore: ['test2Test']
-        });
+        }, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT
@@ -1601,7 +1583,7 @@ describe('DefaultService', (): void => {
         try {
             await testService.list(undefined, (qb: SelectQueryBuilder<Test>): void => {
                 //
-            }, {});
+            }, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1616,7 +1598,7 @@ describe('DefaultService', (): void => {
 
         let serviceError: any;
         try {
-            await testService.list(test, undefined, {});
+            await testService.list(test, undefined, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1633,7 +1615,7 @@ describe('DefaultService', (): void => {
         try {
             await testService.list(test, (qb: SelectQueryBuilder<Test>): void => {
                 //
-            }, undefined);
+            }, undefined, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1655,7 +1637,7 @@ describe('DefaultService', (): void => {
             qb.andWhere(`${test}.id = :id`, {
                 id: 1
             });
-        }, {});
+        }, {}, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
             SELECT
@@ -1677,7 +1659,7 @@ describe('DefaultService', (): void => {
         try {
             await testService.count(undefined, (qb: SelectQueryBuilder<Test>): void => {
                 //
-            }, {});
+            }, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1692,7 +1674,7 @@ describe('DefaultService', (): void => {
 
         let serviceError: any;
         try {
-            await testService.count(test, undefined, {});
+            await testService.count(test, undefined, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1709,7 +1691,7 @@ describe('DefaultService', (): void => {
         try {
             await testService.count(test, (qb: SelectQueryBuilder<Test>): void => {
                 //
-            }, undefined);
+            }, undefined, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1731,7 +1713,7 @@ describe('DefaultService', (): void => {
             qb.andWhere(`${test}.id = :id`, {
                 id: 1
             });
-        }, {});
+        }, {}, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
             SELECT
@@ -1753,7 +1735,7 @@ describe('DefaultService', (): void => {
         try {
             await testService.listAndCount(undefined, (qb: SelectQueryBuilder<Test>): void => {
                 //
-            }, {});
+            }, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1768,7 +1750,7 @@ describe('DefaultService', (): void => {
 
         let serviceError: any;
         try {
-            await testService.listAndCount(test, undefined, {});
+            await testService.listAndCount(test, undefined, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1785,7 +1767,7 @@ describe('DefaultService', (): void => {
         try {
             await testService.listAndCount(test, (qb: SelectQueryBuilder<Test>): void => {
                 //
-            }, undefined);
+            }, undefined, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1807,7 +1789,7 @@ describe('DefaultService', (): void => {
             qb.andWhere(`${test}.id = :id`, {
                 id: 1
             });
-        }, {});
+        }, {}, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
             SELECT
@@ -1828,7 +1810,7 @@ describe('DefaultService', (): void => {
     it('71. listBy', async (): Promise<void> => {
         let serviceError: any;
         try {
-            await testService.listBy(undefined, 'id', 1, {});
+            await testService.listBy(undefined, 'id', 1, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1843,7 +1825,7 @@ describe('DefaultService', (): void => {
 
         let serviceError: any;
         try {
-            await testService.listBy(test, undefined, 1, {});
+            await testService.listBy(test, undefined, 1, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1858,7 +1840,7 @@ describe('DefaultService', (): void => {
 
         let serviceError: any;
         try {
-            await testService.listBy(test, 'id', 1, undefined);
+            await testService.listBy(test, 'id', 1, undefined, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1876,7 +1858,7 @@ describe('DefaultService', (): void => {
             sql = data;
         };
 
-        const items: Test[] = await testService.listBy(test, 'id', 1, {});
+        const items: Test[] = await testService.listBy(test, 'id', 1, {}, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
             SELECT
@@ -1896,7 +1878,7 @@ describe('DefaultService', (): void => {
     it('75. findById', async (): Promise<void> => {
         let serviceError: any;
         try {
-            await testService.findById(undefined, 1, {});
+            await testService.findById(undefined, 1, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1911,7 +1893,7 @@ describe('DefaultService', (): void => {
 
         let serviceError: any;
         try {
-            await testService.findById(test, undefined, {});
+            await testService.findById(test, undefined, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1926,7 +1908,7 @@ describe('DefaultService', (): void => {
 
         let serviceError: any;
         try {
-            await testService.findById(test, 1, undefined);
+            await testService.findById(test, 1, undefined, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1944,7 +1926,7 @@ describe('DefaultService', (): void => {
             sql = data;
         };
 
-        const item: Test = await testService.findById('test', 1, {});
+        const item: Test = await testService.findById('test', 1, {}, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
             SELECT
@@ -1963,7 +1945,7 @@ describe('DefaultService', (): void => {
     it('79. findBy', async (): Promise<void> => {
         let serviceError: any;
         try {
-            await testService.findBy(undefined, 'id', 1, {});
+            await testService.findBy(undefined, 'id', 1, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1978,7 +1960,7 @@ describe('DefaultService', (): void => {
 
         let serviceError: any;
         try {
-            await testService.findBy(test, undefined, 1, {});
+            await testService.findBy(test, undefined, 1, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -1993,7 +1975,7 @@ describe('DefaultService', (): void => {
 
         let serviceError: any;
         try {
-            await testService.findBy(test, 'id', 1, undefined);
+            await testService.findBy(test, 'id', 1, undefined, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -2011,7 +1993,7 @@ describe('DefaultService', (): void => {
             sql = data;
         };
 
-        const item: Test = await testService.findBy('test', 'id', 1, {});
+        const item: Test = await testService.findBy('test', 'id', 1, {}, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
             SELECT
@@ -2032,7 +2014,7 @@ describe('DefaultService', (): void => {
         try {
             await testService.find(undefined, (qb: SelectQueryBuilder<Test>): void => {
                 //
-            }, {});
+            }, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -2047,7 +2029,7 @@ describe('DefaultService', (): void => {
 
         let serviceError: any;
         try {
-            await testService.find(test, undefined, {});
+            await testService.find(test, undefined, {}, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -2064,7 +2046,7 @@ describe('DefaultService', (): void => {
         try {
             await testService.find(test, (qb: SelectQueryBuilder<Test>): void => {
                 //
-            }, undefined);
+            }, undefined, {});
         }
         catch (err: any) {
             serviceError = err;
@@ -2086,7 +2068,7 @@ describe('DefaultService', (): void => {
             qb.andWhere(`${test}.id = :id`, {
                 id: 1
             });
-        }, {});
+        }, {}, {});
 
         expect(sql.replace(/\s+/ig, ' ')).to.contain(`
             SELECT
@@ -2112,7 +2094,7 @@ describe('DefaultService', (): void => {
         expect(item.name).to.be.eq('test');
         expect(item.createdAt).to.exist;
         expect(item.updatedAt).to.not.exist;
-        expect(await testService.findById('test', item.id, {})).to.exist;
+        expect(await testService.findById('test', item.id, {}, {})).to.exist;
     });
 
     it('88. save', async (): Promise<void> => {
@@ -2153,7 +2135,7 @@ describe('DefaultService', (): void => {
 
         expect(id).to.exist;
         expect(err).to.exist.and.have.property('message').eq('Test');
-        expect(await testService.findById('test', id, {})).to.not.exist;
+        expect(await testService.findById('test', id, {}, {})).to.not.exist;
     });
 
     it('91. remove', async (): Promise<void> => {
@@ -2166,7 +2148,7 @@ describe('DefaultService', (): void => {
 
         await testService.remove(item);
 
-        expect(await testService.findById('test', item.id, {})).to.not.exist;
+        expect(await testService.findById('test', item.id, {}, {})).to.not.exist;
     });
 
     it('92. remove', async (): Promise<void> => {
@@ -2190,7 +2172,7 @@ describe('DefaultService', (): void => {
 
         expect(id).to.exist;
         expect(err).to.exist.and.have.property('message').eq('Test');
-        expect(await testService.findById('test', id, {})).to.exist;
+        expect(await testService.findById('test', id, {}, {})).to.exist;
     });
 
     it('93. setJoins', async (): Promise<void> => {
@@ -2201,7 +2183,7 @@ describe('DefaultService', (): void => {
 
         const qb: SelectQueryBuilder<Test3> = testService3.getRepository().createQueryBuilder(test3);
 
-        testService3.setJoins(test3, qb, {});
+        testService3.setJoins(test3, qb, {}, {});
 
         expect(qb.getSql().replace(/\s+/ig, ' ')).to.be.eq(`
             SELECT

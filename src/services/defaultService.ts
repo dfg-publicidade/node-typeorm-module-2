@@ -107,7 +107,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
                 for (const child of this.childEntities) {
                     if (child.name === subfield) {
-                        const result: string = child.service.getInstance(this.connectionName).translateParams(child.name, child.alias);
+                        const result: string = child.service.getInstance(this.connectionName).translateParams(compl, child.alias);
 
                         return result ? alias + result : undefined;
                     }
