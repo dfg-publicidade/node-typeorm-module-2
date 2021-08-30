@@ -307,6 +307,7 @@ class DefaultService extends serviceUtil_1.default {
                 id
             });
         }, serviceOptions, options, transactionEntityManager);
+        qb.orderBy(this.getSorting(alias, serviceOptions, options));
         this.debug(qb.getSql());
         return qb.getOne();
     }
@@ -325,6 +326,7 @@ class DefaultService extends serviceUtil_1.default {
             findParamValue[fieldName] = fieldValue;
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
         }, serviceOptions, options, transactionEntityManager);
+        qb.orderBy(this.getSorting(alias, serviceOptions, options));
         this.debug(qb.getSql());
         return qb.getOne();
     }
@@ -339,6 +341,7 @@ class DefaultService extends serviceUtil_1.default {
             throw new Error('Service options was not provided.');
         }
         const qb = this.prepareQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
+        qb.orderBy(this.getSorting(alias, serviceOptions, options));
         this.debug(qb.getSql());
         return qb.getOne();
     }

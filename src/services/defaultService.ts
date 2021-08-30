@@ -437,6 +437,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             });
         }, serviceOptions, options, transactionEntityManager);
 
+        qb.orderBy(this.getSorting(alias, serviceOptions, options));
+
         this.debug(qb.getSql());
 
         return qb.getOne();
@@ -461,6 +463,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
         }, serviceOptions, options, transactionEntityManager);
 
+        qb.orderBy(this.getSorting(alias, serviceOptions, options));
+
         this.debug(qb.getSql());
 
         return qb.getOne();
@@ -479,6 +483,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         }
 
         const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
+
+        qb.orderBy(this.getSorting(alias, serviceOptions, options));
 
         this.debug(qb.getSql());
 
