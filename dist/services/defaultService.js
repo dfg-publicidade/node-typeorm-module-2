@@ -140,7 +140,10 @@ class DefaultService extends serviceUtil_1.default {
         DefaultService.forChilds(alias, this.childEntities, (alias, child, serviceOptions, options) => {
             var _a;
             const childService = child.service.getInstance(this.connectionName);
-            const childJoinType = child.joinType ? child.joinType : 'leftJoinAndSelect';
+            let childJoinType = child.joinType ? child.joinType : 'leftJoinAndSelect';
+            if (serviceOptions.joinType && !options.parent) {
+                childJoinType = serviceOptions.joinType;
+            }
             const childQb = childService.getRepository().createQueryBuilder(alias + child.alias);
             (_a = serviceOptions.ignore) === null || _a === void 0 ? void 0 : _a.push(`${alias}${child.alias}*`);
             if (!child.dependent && (childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect')) {
@@ -161,7 +164,8 @@ class DefaultService extends serviceUtil_1.default {
                 subitems: child.subitems,
                 ignore: serviceOptions.ignore ? serviceOptions.ignore : undefined,
                 only: child.only,
-                andWhere: serviceOptions.andWhere
+                andWhere: serviceOptions.andWhere,
+                parent: options.parent
             }, options);
             if (child.dependent && (childJoinType === 'innerJoin' || childJoinType === 'innerJoinAndSelect')) {
                 childService.setDefaultQuery(alias + child.alias, qb, serviceOptions, options);

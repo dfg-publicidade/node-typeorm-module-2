@@ -205,7 +205,11 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         ): void => {
             const childService: DefaultService<any> = child.service.getInstance(this.connectionName);
 
-            const childJoinType: JoinType = child.joinType ? child.joinType : 'leftJoinAndSelect';
+            let childJoinType: JoinType = child.joinType ? child.joinType : 'leftJoinAndSelect';
+
+            if (serviceOptions.joinType && !options.parent) {
+                childJoinType = serviceOptions.joinType;
+            }
 
             const childQb: SelectQueryBuilder<any> = childService.getRepository().createQueryBuilder(alias + child.alias);
 
@@ -240,7 +244,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
                 subitems: child.subitems,
                 ignore: serviceOptions.ignore ? serviceOptions.ignore : undefined,
                 only: child.only,
-                andWhere: serviceOptions.andWhere
+                andWhere: serviceOptions.andWhere,
+                parent: options.parent
             }, options);
 
             if (child.dependent && (childJoinType === 'innerJoin' || childJoinType === 'innerJoinAndSelect')) {
