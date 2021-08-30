@@ -300,6 +300,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
                 child: ChildEntity,
                 serviceOptions: ServiceOptions<Subitem>
             ): void => {
+                serviceOptions.ignore?.push(`${alias}${child.alias}*`);
+
                 sort = {
                     ...sort,
                     ...child.service.getInstance(this.connectionName).getSorting(alias + child.alias, {

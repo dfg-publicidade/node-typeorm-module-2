@@ -204,6 +204,8 @@ class DefaultService extends serviceUtil_1.default {
                 sort = Object.assign(Object.assign({}, sort), defaultSort);
             }
             DefaultService.forChilds(alias, this.childEntities, (alias, child, serviceOptions) => {
+                var _a;
+                (_a = serviceOptions.ignore) === null || _a === void 0 ? void 0 : _a.push(`${alias}${child.alias}*`);
                 sort = Object.assign(Object.assign({}, sort), child.service.getInstance(this.connectionName).getSorting(alias + child.alias, {
                     origin: alias,
                     ignore: serviceOptions.ignore,
