@@ -286,13 +286,21 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
                     throw new Error('Sort keys must start with \'$alias.\'');
                 }
 
-                const defaultSort: any = {};
-                defaultSort[key.replace('$alias', alias)] = this.defaultSorting[key];
+                let aliasField: string;
+                if (serviceOptions.origin) {
+                    aliasField = key.replace('$alias', alias);
+                    aliasField = aliasField.substring(0, aliasField.indexOf('.'));
+                }
 
-                sort = {
-                    ...sort,
-                    ...defaultSort
-                };
+                if (!serviceOptions.origin || !aliasField.toLowerCase().endsWith(serviceOptions.origin.toLowerCase())) {
+                    const defaultSort: any = {};
+                    defaultSort[key.replace('$alias', alias)] = this.defaultSorting[key];
+
+                    sort = {
+                        ...sort,
+                        ...defaultSort
+                    };
+                }
             }
 
             DefaultService.forChilds(alias, this.childEntities, (

@@ -199,9 +199,16 @@ class DefaultService extends serviceUtil_1.default {
                 if (key.indexOf('$alias') !== 0) {
                     throw new Error('Sort keys must start with \'$alias.\'');
                 }
-                const defaultSort = {};
-                defaultSort[key.replace('$alias', alias)] = this.defaultSorting[key];
-                sort = Object.assign(Object.assign({}, sort), defaultSort);
+                let aliasField;
+                if (serviceOptions.origin) {
+                    aliasField = key.replace('$alias', alias);
+                    aliasField = aliasField.substring(0, aliasField.indexOf('.'));
+                }
+                if (!serviceOptions.origin || !aliasField.toLowerCase().endsWith(serviceOptions.origin.toLowerCase())) {
+                    const defaultSort = {};
+                    defaultSort[key.replace('$alias', alias)] = this.defaultSorting[key];
+                    sort = Object.assign(Object.assign({}, sort), defaultSort);
+                }
             }
             DefaultService.forChilds(alias, this.childEntities, (alias, child, serviceOptions) => {
                 var _a;
