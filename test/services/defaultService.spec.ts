@@ -272,6 +272,10 @@ class TestService3 extends DefaultService<Test3> {
             qb.andWhere(`${alias}Test2.id > 0`);
         }
     }
+
+    public setDefaultSorting(sort: any): void {
+        this.defaultSorting = sort;
+    }
 }
 
 class TestService4 extends DefaultService<Test3> {
@@ -770,6 +774,22 @@ describe('DefaultService', (): void => {
         }, {})).to.be.deep.eq({
             'testTest2.title': 'ASC',
             'test.name': 'ASC'
+        });
+
+        testService2.setDefaultSorting({});
+    });
+
+    it('33. getSorting', async (): Promise<void> => {
+        testService2.setDefaultSorting({
+            '$alias.id': 'ASC',
+            '$aliasTest.name': 'ASC'
+        });
+
+        expect(testService.getSorting('test', {
+            subitems: ['tests']
+        }, {})).to.be.deep.eq({
+            'test.name': 'ASC',
+            'testTest2.id': 'ASC'
         });
 
         testService2.setDefaultSorting({});
