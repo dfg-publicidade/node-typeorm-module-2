@@ -556,7 +556,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         qb.orderBy(this.getSorting(alias, serviceOptions, options));
 
         if (serviceOptions?.additionalSort) {
-            qb.addOrderBy(serviceOptions?.additionalSort);
+            qb.addOrderBy(serviceOptions?.additionalSort[0], serviceOptions?.additionalSort[1] as any);
         }
 
         this.setPagination(qb, serviceOptions);

@@ -395,7 +395,7 @@ class DefaultService extends serviceUtil_1.default {
         const qb = this.prepareQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
         qb.orderBy(this.getSorting(alias, serviceOptions, options));
         if (serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.additionalSort) {
-            qb.addOrderBy(serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.additionalSort);
+            qb.addOrderBy(serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.additionalSort[0], serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.additionalSort[1]);
         }
         this.setPagination(qb, serviceOptions);
         return qb;
