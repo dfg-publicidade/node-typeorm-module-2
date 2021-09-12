@@ -8,7 +8,7 @@ interface ServiceOptions<T> {
     only?: string;
     origin?: string;
     sort?: any;
-    additionalSort?: [string, string];
+    additionalSort?: any;
     subitems?: T[];
     parent?: boolean;
 }

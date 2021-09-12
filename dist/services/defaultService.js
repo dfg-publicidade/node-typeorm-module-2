@@ -393,10 +393,7 @@ class DefaultService extends serviceUtil_1.default {
     }
     prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager) {
         const qb = this.prepareQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
-        qb.orderBy(this.getSorting(alias, serviceOptions, options));
-        if (serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.additionalSort) {
-            qb.addOrderBy(serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.additionalSort[0], serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.additionalSort[1]);
-        }
+        qb.orderBy(Object.assign(Object.assign({}, serviceOptions === null || serviceOptions === void 0 ? void 0 : serviceOptions.additionalSort), this.getSorting(alias, serviceOptions, options)));
         this.setPagination(qb, serviceOptions);
         return qb;
     }
