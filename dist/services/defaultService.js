@@ -393,7 +393,7 @@ class DefaultService extends serviceUtil_1.default {
     }
     prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager) {
         const qb = this.prepareQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
-        qb.orderBy(this.getSorting(alias, serviceOptions, options));
+        qb.addOrderBy(this.getSorting(alias, serviceOptions, options));
         this.setPagination(qb, serviceOptions);
         return qb;
     }

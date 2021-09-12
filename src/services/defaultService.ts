@@ -553,7 +553,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         transactionEntityManager?: EntityManager): SelectQueryBuilder<T> {
         const qb: SelectQueryBuilder<T> = this.prepareQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
 
-        qb.orderBy(this.getSorting(alias, serviceOptions, options));
+        qb.addOrderBy(this.getSorting(alias, serviceOptions, options));
 
         this.setPagination(qb, serviceOptions);
 
