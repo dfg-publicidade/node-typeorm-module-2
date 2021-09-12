@@ -10,6 +10,7 @@ interface ServiceOptions<T> {
     only?: string;
     origin?: string;
     sort?: any;
+    additionalSort?: string;
     subitems?: T[];
     parent?: boolean;
 }
