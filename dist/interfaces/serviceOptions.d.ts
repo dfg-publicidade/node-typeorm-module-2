@@ -11,5 +11,6 @@ interface ServiceOptions<T> {
     additionalSort?: any;
     subitems?: T[];
     parent?: boolean;
+    innerEntity?: string;
 }
 export default ServiceOptions;

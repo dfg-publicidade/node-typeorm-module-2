@@ -100,6 +100,15 @@ class DefaultService extends serviceUtil_1.default {
         if (!serviceOptions) {
             throw new Error('Service options was not provided.');
         }
+        for (const inner of this.innerEntities) {
+            const innerService = new this.classObj(this.connectionName);
+            innerService.innerEntities = [];
+            innerService.parentEntities = inner.parentEntities || [];
+            innerService.childEntities = inner.childEntities || [];
+            innerService.setJoins(alias, qb, {
+                innerEntity: inner.name
+            }, options);
+        }
         DefaultService.forParents(alias, this.parentEntities, (alias, parent, serviceOptions, options) => {
             var _a;
             const parentService = parent.service.getInstance(this.connectionName);
@@ -123,7 +132,7 @@ class DefaultService extends serviceUtil_1.default {
                 parentQb.andWhere(andWhereParam);
             }
             const query = DefaultService.queryToString(alias + parent.alias, alias, parentQb, andWhereParamValue);
-            qb[parentJoinType](`${alias}.${parent.name}`, alias + parent.alias, query === null || query === void 0 ? void 0 : query.where, query === null || query === void 0 ? void 0 : query.params);
+            qb[parentJoinType](`${alias}.${serviceOptions.innerEntity ? serviceOptions.innerEntity + '.' : ''}${parent.name}`, alias + parent.alias, query === null || query === void 0 ? void 0 : query.where, query === null || query === void 0 ? void 0 : query.params);
             parent.service.getInstance(this.connectionName).setJoins(alias + parent.alias, qb, {
                 origin: alias,
                 subitems: parent.subitems,
@@ -157,7 +166,7 @@ class DefaultService extends serviceUtil_1.default {
                 childQb.andWhere(andWhereParam);
             }
             const query = DefaultService.queryToString(alias + child.alias, alias, childQb, andWhereParamValue);
-            qb[childJoinType](`${alias}.${child.name}`, alias + child.alias, query === null || query === void 0 ? void 0 : query.where, query === null || query === void 0 ? void 0 : query.params);
+            qb[childJoinType](`${alias}.${serviceOptions.innerEntity ? serviceOptions.innerEntity + '.' : ''}${child.name}`, alias + child.alias, query === null || query === void 0 ? void 0 : query.where, query === null || query === void 0 ? void 0 : query.params);
             childService.setJoins(alias + child.alias, qb, {
                 origin: alias,
                 joinType: childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect' ? childJoinType : 'leftJoinAndSelect',

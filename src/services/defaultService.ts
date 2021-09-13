@@ -132,6 +132,17 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             throw new Error('Service options was not provided.');
         }
 
+        for (const inner of this.innerEntities) {
+            const innerService: any = new this.classObj(this.connectionName);
+            innerService.innerEntities = [];
+            innerService.parentEntities = inner.parentEntities || [];
+            innerService.childEntities = inner.childEntities || [];
+
+            innerService.setJoins(alias, qb, {
+                innerEntity: inner.name
+            }, options);
+        }
+
         DefaultService.forParents(alias, this.parentEntities, (
             alias: string,
             parent: ParentEntity,
@@ -173,7 +184,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             const query: any = DefaultService.queryToString(alias + parent.alias, alias, parentQb, andWhereParamValue);
 
             qb[parentJoinType](
-                `${alias}.${parent.name}`,
+                `${alias}.${serviceOptions.innerEntity ? serviceOptions.innerEntity + '.' : ''}${parent.name}`,
                 alias + parent.alias,
                 query?.where,
                 query?.params
@@ -232,7 +243,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             const query: any = DefaultService.queryToString(alias + child.alias, alias, childQb, andWhereParamValue);
 
             qb[childJoinType](
-                `${alias}.${child.name}`,
+                `${alias}.${serviceOptions.innerEntity ? serviceOptions.innerEntity + '.' : ''}${child.name}`,
                 alias + child.alias,
                 query?.where,
                 query?.params
