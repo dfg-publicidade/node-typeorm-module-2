@@ -139,6 +139,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             innerService.childEntities = inner.childEntities || [];
 
             innerService.setJoins(alias, qb, {
+                ...serviceOptions,
                 innerEntity: inner.name
             }, options);
         }

@@ -105,9 +105,7 @@ class DefaultService extends serviceUtil_1.default {
             innerService.innerEntities = [];
             innerService.parentEntities = inner.parentEntities || [];
             innerService.childEntities = inner.childEntities || [];
-            innerService.setJoins(alias, qb, {
-                innerEntity: inner.name
-            }, options);
+            innerService.setJoins(alias, qb, Object.assign(Object.assign({}, serviceOptions), { innerEntity: inner.name }), options);
         }
         DefaultService.forParents(alias, this.parentEntities, (alias, parent, serviceOptions, options) => {
             var _a;
