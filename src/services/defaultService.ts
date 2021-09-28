@@ -235,6 +235,10 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
                 childQb.andWhere(child.andWhere);
             }
 
+            if (childJoinType.indexOf('AndSelect') === -1 || serviceOptions.joinType?.indexOf('AndSelect') === -1) {
+                childJoinType = childJoinType.replace('AndSelect', '') as any;
+            }
+
             const [andWhereParam, andWhereParamValue]: [string, any] = DefaultService.parseAndWhere(alias, child.name, serviceOptions.andWhere);
 
             if (andWhereParam) {

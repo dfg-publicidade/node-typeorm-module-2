@@ -145,7 +145,7 @@ class DefaultService extends serviceUtil_1.default {
             }
         }, serviceOptions, options);
         DefaultService.forChilds(alias, this.childEntities, (alias, child, serviceOptions, options) => {
-            var _a;
+            var _a, _b;
             const childService = child.service.getInstance(this.connectionName);
             let childJoinType = child.joinType ? child.joinType : 'leftJoinAndSelect';
             if (serviceOptions.joinType && !options.parent) {
@@ -158,6 +158,9 @@ class DefaultService extends serviceUtil_1.default {
             }
             if (child.andWhere) {
                 childQb.andWhere(child.andWhere);
+            }
+            if (childJoinType.indexOf('AndSelect') === -1 || ((_b = serviceOptions.joinType) === null || _b === void 0 ? void 0 : _b.indexOf('AndSelect')) === -1) {
+                childJoinType = childJoinType.replace('AndSelect', '');
             }
             const [andWhereParam, andWhereParamValue] = DefaultService.parseAndWhere(alias, child.name, serviceOptions.andWhere);
             if (andWhereParam) {
