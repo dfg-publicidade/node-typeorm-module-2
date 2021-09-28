@@ -256,7 +256,8 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
             childService.setJoins(alias + child.alias, qb, {
                 origin: alias,
-                joinType: childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect' ? childJoinType : 'leftJoinAndSelect',
+                joinType: childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect' ? childJoinType
+                    : childJoinType === 'innerJoin' ? 'leftJoin' : 'leftJoinAndSelect',
                 subitems: child.subitems,
                 ignore: serviceOptions.ignore ? serviceOptions.ignore : undefined,
                 only: child.only,

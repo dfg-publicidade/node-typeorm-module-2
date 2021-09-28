@@ -170,7 +170,8 @@ class DefaultService extends serviceUtil_1.default {
             qb[childJoinType](`${alias}.${serviceOptions.innerEntity ? serviceOptions.innerEntity + '.' : ''}${child.name}`, alias + child.alias, query === null || query === void 0 ? void 0 : query.where, query === null || query === void 0 ? void 0 : query.params);
             childService.setJoins(alias + child.alias, qb, {
                 origin: alias,
-                joinType: childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect' ? childJoinType : 'leftJoinAndSelect',
+                joinType: childJoinType === 'leftJoin' || childJoinType === 'leftJoinAndSelect' ? childJoinType
+                    : childJoinType === 'innerJoin' ? 'leftJoin' : 'leftJoinAndSelect',
                 subitems: child.subitems,
                 ignore: serviceOptions.ignore ? serviceOptions.ignore : undefined,
                 only: child.only,
