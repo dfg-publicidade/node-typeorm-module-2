@@ -7,7 +7,7 @@ const debug_1 = __importDefault(require("debug"));
 const typeOrmManager_1 = __importDefault(require("../datasources/typeOrmManager"));
 const serviceUtil_1 = __importDefault(require("../util/serviceUtil"));
 /* Module */
-const debug = debug_1.default('sql:typeorm-default-service');
+const debug = (0, debug_1.default)('sql:typeorm-default-service');
 class DefaultService extends serviceUtil_1.default {
     constructor(repositoryType, classObj, connectionName) {
         super();
