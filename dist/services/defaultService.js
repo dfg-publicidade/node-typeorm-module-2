@@ -248,8 +248,14 @@ class DefaultService extends serviceUtil_1.default {
             throw new Error('Service options was not provided.');
         }
         if (serviceOptions.paginate) {
-            qb.take(serviceOptions.paginate.getLimit());
-            qb.skip(serviceOptions.paginate.getSkip());
+            if (serviceOptions.subitems.length === 0 || !serviceOptions.paginateInMemory) {
+                qb.limit(serviceOptions.paginate.getLimit());
+                qb.offset(serviceOptions.paginate.getSkip());
+            }
+            else {
+                qb.take(serviceOptions.paginate.getLimit());
+                qb.skip(serviceOptions.paginate.getSkip());
+            }
         }
     }
     async list(alias, queryParser, serviceOptions, options, transactionEntityManager) {

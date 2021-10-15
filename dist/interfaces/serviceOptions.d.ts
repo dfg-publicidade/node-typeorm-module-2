@@ -12,5 +12,6 @@ interface ServiceOptions<T> {
     subitems?: T[];
     parent?: boolean;
     innerEntity?: string;
+    paginateInMemory?: boolean;
 }
 export default ServiceOptions;
