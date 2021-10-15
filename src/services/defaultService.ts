@@ -364,10 +364,6 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
                 qb.limit(serviceOptions.paginate.getLimit());
                 qb.offset(serviceOptions.paginate.getSkip());
             }
-            else {
-                qb.take(serviceOptions.paginate.getLimit());
-                qb.skip(serviceOptions.paginate.getSkip());
-            }
         }
     }
 
@@ -386,6 +382,14 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         const qb: SelectQueryBuilder<T> = this.prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
 
         this.debug(qb.getSql());
+
+        if (serviceOptions.paginate) {
+            if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
+                const result: T[] = await qb.getMany();
+
+                return Promise.resolve(result.slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()));
+            }
+        }
 
         return qb.getMany();
     }
@@ -425,6 +429,14 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
 
         this.debug(qb.getSql());
 
+        if (serviceOptions.paginate) {
+            if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
+                const result: [T[], number] = await qb.getManyAndCount();
+
+                return Promise.resolve([result[0].slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()), result[1]]);
+            }
+        }
+
         return qb.getManyAndCount();
     }
 
@@ -448,6 +460,14 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         }, serviceOptions, options, transactionEntityManager);
 
         this.debug(qb.getSql());
+
+        if (serviceOptions.paginate) {
+            if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
+                const result: T[] = await qb.getMany();
+
+                return Promise.resolve(result.slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()));
+            }
+        }
 
         return qb.getMany();
     }

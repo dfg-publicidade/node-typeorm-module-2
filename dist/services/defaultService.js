@@ -252,10 +252,6 @@ class DefaultService extends serviceUtil_1.default {
                 qb.limit(serviceOptions.paginate.getLimit());
                 qb.offset(serviceOptions.paginate.getSkip());
             }
-            else {
-                qb.take(serviceOptions.paginate.getLimit());
-                qb.skip(serviceOptions.paginate.getSkip());
-            }
         }
     }
     async list(alias, queryParser, serviceOptions, options, transactionEntityManager) {
@@ -270,6 +266,12 @@ class DefaultService extends serviceUtil_1.default {
         }
         const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
         this.debug(qb.getSql());
+        if (serviceOptions.paginate) {
+            if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
+                const result = await qb.getMany();
+                return Promise.resolve(result.slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()));
+            }
+        }
         return qb.getMany();
     }
     async count(alias, queryParser, serviceOptions, options, transactionEntityManager) {
@@ -298,6 +300,12 @@ class DefaultService extends serviceUtil_1.default {
         }
         const qb = this.prepareListQuery(alias, queryParser, serviceOptions, options, transactionEntityManager);
         this.debug(qb.getSql());
+        if (serviceOptions.paginate) {
+            if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
+                const result = await qb.getManyAndCount();
+                return Promise.resolve([result[0].slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()), result[1]]);
+            }
+        }
         return qb.getManyAndCount();
     }
     async listBy(alias, fieldName, fieldValue, serviceOptions, options, transactionEntityManager) {
@@ -316,6 +324,12 @@ class DefaultService extends serviceUtil_1.default {
             qb.where(`${alias}.${fieldName} = :${fieldName}`, findParamValue);
         }, serviceOptions, options, transactionEntityManager);
         this.debug(qb.getSql());
+        if (serviceOptions.paginate) {
+            if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
+                const result = await qb.getMany();
+                return Promise.resolve(result.slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()));
+            }
+        }
         return qb.getMany();
     }
     async findById(alias, id, serviceOptions, options, transactionEntityManager) {
