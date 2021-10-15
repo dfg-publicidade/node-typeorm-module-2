@@ -248,7 +248,7 @@ class DefaultService extends serviceUtil_1.default {
             throw new Error('Service options was not provided.');
         }
         if (serviceOptions.paginate) {
-            if (serviceOptions.subitems.length === 0 || !serviceOptions.paginateInMemory) {
+            if (serviceOptions.subitems.length === 0 && !serviceOptions.paginateInMemory) {
                 qb.limit(serviceOptions.paginate.getLimit());
                 qb.offset(serviceOptions.paginate.getSkip());
             }

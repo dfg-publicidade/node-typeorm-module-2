@@ -360,7 +360,7 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
         }
 
         if (serviceOptions.paginate) {
-            if (serviceOptions.subitems.length === 0 || !serviceOptions.paginateInMemory) {
+            if (serviceOptions.subitems.length === 0 && !serviceOptions.paginateInMemory) {
                 qb.limit(serviceOptions.paginate.getLimit());
                 qb.offset(serviceOptions.paginate.getSkip());
             }
