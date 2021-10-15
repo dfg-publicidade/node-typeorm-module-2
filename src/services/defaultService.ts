@@ -387,7 +387,10 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
                 const result: T[] = await qb.getMany();
 
-                return Promise.resolve(result.slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()));
+                return Promise.resolve(result.slice(
+                    serviceOptions.paginate.getSkip(),
+                    serviceOptions.paginate.getSkip() + serviceOptions.paginate.getLimit()
+                ));
             }
         }
 
@@ -433,7 +436,10 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
                 const result: [T[], number] = await qb.getManyAndCount();
 
-                return Promise.resolve([result[0].slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()), result[1]]);
+                return Promise.resolve([result[0].slice(
+                    serviceOptions.paginate.getSkip(),
+                    serviceOptions.paginate.getSkip() + serviceOptions.paginate.getLimit()
+                ), result[1]]);
             }
         }
 
@@ -465,7 +471,10 @@ abstract class DefaultService<T> extends ServiceUtil implements ParamService {
             if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
                 const result: T[] = await qb.getMany();
 
-                return Promise.resolve(result.slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()));
+                return Promise.resolve(result.slice(
+                    serviceOptions.paginate.getSkip(),
+                    serviceOptions.paginate.getSkip() + serviceOptions.paginate.getLimit()
+                ));
             }
         }
 

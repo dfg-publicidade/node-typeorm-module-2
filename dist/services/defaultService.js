@@ -269,7 +269,7 @@ class DefaultService extends serviceUtil_1.default {
         if (serviceOptions.paginate) {
             if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
                 const result = await qb.getMany();
-                return Promise.resolve(result.slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()));
+                return Promise.resolve(result.slice(serviceOptions.paginate.getSkip(), serviceOptions.paginate.getSkip() + serviceOptions.paginate.getLimit()));
             }
         }
         return qb.getMany();
@@ -303,7 +303,7 @@ class DefaultService extends serviceUtil_1.default {
         if (serviceOptions.paginate) {
             if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
                 const result = await qb.getManyAndCount();
-                return Promise.resolve([result[0].slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()), result[1]]);
+                return Promise.resolve([result[0].slice(serviceOptions.paginate.getSkip(), serviceOptions.paginate.getSkip() + serviceOptions.paginate.getLimit()), result[1]]);
             }
         }
         return qb.getManyAndCount();
@@ -327,7 +327,7 @@ class DefaultService extends serviceUtil_1.default {
         if (serviceOptions.paginate) {
             if ((serviceOptions.subitems && serviceOptions.subitems.length > 0) || serviceOptions.paginateInMemory) {
                 const result = await qb.getMany();
-                return Promise.resolve(result.slice(serviceOptions.paginate.getSkip(), -serviceOptions.paginate.getLimit()));
+                return Promise.resolve(result.slice(serviceOptions.paginate.getSkip(), serviceOptions.paginate.getSkip() + serviceOptions.paginate.getLimit()));
             }
         }
         return qb.getMany();
